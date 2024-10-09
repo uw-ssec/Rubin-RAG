@@ -19,8 +19,6 @@
     "OLMO_MODEL_FILE": "OLMo-7B-Instruct-Q4_K_M.gguf"
   },
   "updateContentCommand": {
-    "download_tutorial_data": "python resources/download_data.py",
-    "fix_permissions": "sudo chown -R mambauser:mambauser /home/mambauser"
-  },
-  "runArgs": ["--user", "mambauser"]
+    "download_tutorial_data": "python resources/download_data.py"
+  }
 }
