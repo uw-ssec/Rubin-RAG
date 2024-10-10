@@ -20,6 +20,5 @@
   },
   "updateContentCommand": {
     "download_tutorial_data": "python resources/download_data.py"
-  },
-  "postCreateCommand": "conda env create -f environment.yml && conda activate notebook"
+  }
 }
