@@ -9,6 +9,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_community.llms import LlamaCpp
 from langchain_qdrant import Qdrant
 from langchain_huggingface import HuggingFaceEmbeddings
+from qdrant_client import QdrantClient
 
 from ssec_tutorials import download_olmo_model
 
@@ -143,8 +144,15 @@ qdrant_collection = "rubin_telescope"
 
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L12-v2")
 
-db = Qdrant.from_existing_collection(
-    collection_name=qdrant_collection, embedding=embedding, path=qdrant_path
+# db = Qdrant.from_existing_collection(
+#     collection_name=qdrant_collection, embedding=embedding, path=qdrant_path
+# )
+
+client = QdrantClient(path=str(qdrant_path))
+db = Qdrant(
+    client=client,
+    collection_name=qdrant_collection,
+    embeddings=embedding
 )
 
 input_prompt_template = textwrap.dedent(
