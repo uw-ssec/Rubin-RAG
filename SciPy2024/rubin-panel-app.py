@@ -139,7 +139,7 @@ async def callback(contents, user, instance):
 pn.extension()
 
 model_path = download_olmo_model()
-qdrant_path = Path("/workspaces/tutorials/resources/rubin_qdrant")
+qdrant_path = Path("/workspaces/Rubin-RAG/resources/rubin_qdrant")
 qdrant_collection = "rubin_telescope"
 
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L12-v2")
