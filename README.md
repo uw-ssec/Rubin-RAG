@@ -16,8 +16,8 @@ This repository hosts the Chatbot Panel app designed to answer questions related
    Alternatively, you can manually launch a codespace by following these steps:
    
    <div style="display: flex; gap: 10px;">
-       <img src="images/open_with_codespaces.png" alt="Open with Codespaces" width="300" />
-       <img src="images/select_dev_container.png" alt="Select Dev Container" width="300" />
+       <img src="images/open_with_codespaces.png" alt="Open with Codespaces" width="500" />
+       <img src="images/select_dev_container.png" alt="Select Dev Container" width="500" />
    </div>
 
 2. **Select Notebook Environment**  
