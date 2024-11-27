@@ -168,3 +168,7 @@ conf.py
 
 # Don's ignore
 models-preprocessing/
+
+# pixi environments
+.pixi
+*.egg-info
