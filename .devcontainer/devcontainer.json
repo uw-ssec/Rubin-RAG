@@ -30,5 +30,12 @@
   },
   "postCreateCommand": {
     "create-shell-hook": "pixi shell-hook --shell bash > /etc/profile.d/pixi.sh"
-  }
+  },
+  "runArgs": [
+    "--privileged",                      // Allow privileged mode for Docker
+    "--volume=/var/run/docker.sock:/var/run/docker.sock" // Bind Docker socket for host communication
+  ],
+  "securityOpt": [
+    "seccomp=unconfined"                 // Relax security for Docker operations
+  ]
 }

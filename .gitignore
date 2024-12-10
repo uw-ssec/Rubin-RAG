@@ -172,3 +172,6 @@ models-preprocessing/
 # pixi environments
 .pixi
 *.egg-info
+
+# Raw data (large files)
+resources/raw-data
