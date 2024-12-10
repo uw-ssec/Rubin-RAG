@@ -20,13 +20,10 @@ This repository hosts the Chatbot Panel app designed to answer questions related
        <img src="images/select_dev_container.png" alt="Select Dev Container" width="500" />
    </div>
 
-2. **Select Notebook Environment**  
-   Ensure you are on the "notebook" environment, which is activated by default on terminal.
-
-3. **Run the Panel Application**  
+2. **Run the Panel Application**  
    Start the chatbot panel app by running the following command:
    ```bash
-   python rubin-chat/rubin-panel-app.py
+   pixi run python rubin-chat/rubin-panel-app.py
 
 ## GitHub Codespaces
 
