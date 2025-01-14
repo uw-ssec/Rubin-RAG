@@ -3,90 +3,81 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from urllib.request import urlretrieve
-from zipfile import ZipFile
-
-import requests
-from langchain.schema import Document
 from transformers import AutoModelForCausalLM
 
 HOME_DIR = Path.home()
 # Nebari shared directory
-# default to this
 CACHE_DIR = HOME_DIR / "shared" / "scipy" / "gen-ai-copilot-with-rag"
 if not CACHE_DIR.exists():
-    # This is for local development
     CACHE_DIR = HOME_DIR / ".cache"
 
 DEFAULT_TUTORIAL_CACHE = CACHE_DIR / "ssec_tutorials"
 TUTORIAL_CACHE = Path(os.environ.get("SSEC_TUTORIALS_CACHE", DEFAULT_TUTORIAL_CACHE)).expanduser()
 TUTORIAL_CACHE.mkdir(parents=True, exist_ok=True)
 
+# Environment variables
 OLMO_MODEL_FILE = os.environ.get("OLMO_MODEL_FILE", "OLMo-7B-Instruct-Q4_K_M.gguf")
-OLMO_MODEL = TUTORIAL_CACHE / OLMO_MODEL_FILE
-
-OLMO_2_MODEL_FILE = os.environ.get("OLMO_2_MODEL_FILE", "OLMo-2-1124-7B-Instruct")
-OLMO_2_MODEL = TUTORIAL_CACHE / OLMO_2_MODEL_FILE
+OLMO_2_MODEL_FILE = os.environ.get("OLMO_2_MODEL_FILE", "olmo-2-1124-7B-instruct-Q4_K_M.gguf")
 
 # Configure Hugging Face to use the tutorial cache
 os.environ["HF_HOME"] = str(TUTORIAL_CACHE)
 
-# Set the URL for tutorials data assets
-TUTORIALS_DATA_URL = "https://github.com/uw-ssec/tutorials-data/releases/download/scipy-2024/"
-
-
-def download_olmo_model(model_file: str | None = None, force=False) -> Path:
-    """Download the OLMO model from the Hugging Face model hub.
+def download_model(
+    model_name: str,
+    model_file: str,
+    source: str,
+    force: bool = False
+) -> Path:
+    """
+    Generalized function to download a model and store it in the cache directory.
 
     Parameters
     ----------
-    model_file : str | None, optional
-        The name of the model file to download, by default None
+    model_name : str
+        Name of the model for display purposes.
+    model_file : str
+        File name or identifier for the model.
+    source : str
+        URL or identifier (Hugging Face model ID).
     force : bool, optional
-        Whether to force the download even if the file already exists, by default False
+        Whether to force download even if the model already exists, by default False.
 
     Returns
     -------
     pathlib.Path
-        The path to the downloaded model file
+        Path to the downloaded model.
     """
+    model_path = TUTORIAL_CACHE / model_file
 
-    if not OLMO_MODEL.exists() or force:
-        if model_file is None:
-            model_file = OLMO_MODEL_FILE
-            olmo_model = OLMO_MODEL
-        else:
-            olmo_model = TUTORIAL_CACHE / model_file
-        olmo_model_url = (
-            f"https://huggingface.co/ssec-uw/OLMo-7B-Instruct-GGUF/resolve/main/{model_file}"
-        )
-        urlretrieve(olmo_model_url, olmo_model)
-        return olmo_model
+    if model_path.exists() and not force:
+        print(f"{model_name} model already exists at {model_path}")
+        return model_path
 
-    print(f"Model already exists at {OLMO_MODEL}")
-    return OLMO_MODEL
+    print(f"Downloading {model_name} model...")
 
-def download_olmo_2_model(force=False) -> Path:
-    """Download the OLMO 2 model using Hugging Face Transformers and cache locally.
+    if source.startswith("http"):
+        # Download from URL
+        urlretrieve(source, model_path)
+    else:
+        # Download using Hugging Face's transformers
+        AutoModelForCausalLM.from_pretrained(source, cache_dir=TUTORIAL_CACHE)
 
-    Parameters
-    ----------
-    force : bool, optional
-        Whether to force the download even if the file already exists, by default False
+    print(f"{model_name} model cached at {model_path}")
+    return model_path
 
-    Returns
-    -------
-    pathlib.Path
-        The path to the downloaded model directory
+
+def download_olmo_model(force: bool = False) -> Path:
     """
+    Wrapper for downloading the OLMO model from a URL.
+    """
+    url = f"https://huggingface.co/ssec-uw/OLMo-7B-Instruct-GGUF/resolve/main/{OLMO_MODEL_FILE}"
+    return download_model("OLMO", OLMO_MODEL_FILE, url, force)
 
-    if OLMO_2_MODEL.exists() and not force:
-        print(f"Model already exists at {OLMO_2_MODEL}")
-        return OLMO_2_MODEL
 
-    # Download model using Hugging Face's AutoModelForCausalLM
-    print(f"Downloading OLMO 2 model: {OLMO_2_MODEL_FILE}...")
-    model = AutoModelForCausalLM.from_pretrained("allenai/OLMo-2-1124-7B-Instruct")
+def download_olmo_2_model(force: bool = False) -> Path:
+    """
+    Wrapper for downloading the OLMO 2 model from Hugging Face.
+    """
+    url = f"https://huggingface.co/allenai/OLMo-2-1124-7B-Instruct-GGUF/resolve/main/{OLMO_2_MODEL_FILE}"
+    return download_model("OLMO 2", OLMO_2_MODEL_FILE, url,force)
 
-    print(f"Model cached at: {TUTORIAL_CACHE}")
-
-    return OLMO_2_MODEL
