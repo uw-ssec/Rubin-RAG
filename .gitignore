@@ -175,3 +175,6 @@ models-preprocessing/
 
 # Raw data (large files)
 resources/raw-data
+
+# Data Files - local
+.data/
