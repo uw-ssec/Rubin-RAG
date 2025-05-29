@@ -174,4 +174,7 @@ models-preprocessing/
 *.egg-info
 
 # Raw data (large files)
-resources/raw-data
+resources/raw-data.data/
+
+# Data files
+.data/
