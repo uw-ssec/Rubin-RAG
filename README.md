@@ -74,3 +74,72 @@ supported by Schmidt Sciences, LLC. as part of the
     <img src="https://upload.wikimedia.org/wikipedia/commons/1/17/Washington_Huskies_logo.svg" alt="uw_logo" height="100">
   </a>
 </div>
+
+
+## Running the Rubin-RAG App Locally
+
+To run the Rubin-RAG panel app on your local machine (macOS), follow these steps:
+
+### 1. Clone the repository (if not already done)
+```bash
+git clone -b clean https://github.com/baisakhi771/Rubin-RAG.git
+cd Rubin-RAG
+```
+
+### 2. Set up a virtual environment (recommended)
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+### 3. Install dependencies from `requirements.txt`
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 4. (Optional) Install and use Pixi for environment management
+
+Install Pixi (if not already installed):
+```bash
+curl -sSL https://pixi.sh/install.sh | bash
+```
+
+Then use it to install and manage dependencies:
+```bash
+pixi install
+```
+
+You can now run the app using Pixi:
+```bash
+pixi run python rubin-chat/rubin-panel-app.py
+```
+
+---
+
+
+
+### 5. Ensure writable Qdrant directory
+
+Update `rubin-panel-app.py`:
+```python
+from pathlib import Path
+
+qdrant_path = Path("../resources/rubin_qdrant")
+```
+
+Create the directory if it doesn’t exist:
+
+```bash
+mkdir -p resources/rubin_qdrant
+```
+
+---
+
+### 6. Run the app
+
+```bash
+pixi run python rubin-chat/rubin-panel-app.py
+```
+
+Then visit [http://localhost:8000](http://localhost:8000) (Use the port number as shown on the terminal) in your browser to use the Rubin RAG interface.
