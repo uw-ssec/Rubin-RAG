@@ -140,7 +140,8 @@ pn.extension()
 
 model_path = download_olmo_model()
 # qdrant_path = Path("/workspaces/Rubin-RAG/resources/rubin_qdrant")
-qdrant_path = Path("../resources/rubin_qdrant")
+qdrant_path = Path("resources/rubin_qdrant")
+# qdrant_path = "/Users/baisakhisarkar/Downloads/OPT_UW_Temp/RubinRAG/Rubin-RAG/resources/rubin_qdrant"
 qdrant_collection = "rubin_telescope"
 
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L12-v2")
@@ -150,6 +151,7 @@ embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L
 # )
 
 client = QdrantClient(path=str(qdrant_path))
+# print("Available Qdrant collections:", client.get_collections())
 db = Qdrant(
     client=client,
     collection_name=qdrant_collection,

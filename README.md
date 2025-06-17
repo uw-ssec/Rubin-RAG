@@ -125,7 +125,7 @@ Update `rubin-panel-app.py`:
 ```python
 from pathlib import Path
 
-qdrant_path = Path("../resources/rubin_qdrant")
+qdrant_path = Path("resources/rubin_qdrant")
 ```
 
 Create the directory if it doesn’t exist:
