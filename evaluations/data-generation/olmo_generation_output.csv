@@ -1,0 +1,285 @@
+question,OLMo-1B,OLMo-1B-0724-hf,OLMo-2-0425-1B-Instruct
+"Hi, 
+I’m following this tutorial:  The LSST Science Pipelines — LSST Science Pipelines  and I’ve ran the first step “single_frame” task a few times. Each time it runs it produces different results: if I go through all calexps in the output collection ( butler.registry.queryDatasets(""calexp"", collections=collection) ), and look at their sky coverage (calexp width, height and WCS mapping), and then find the total coverage of the whole collection (max and min ra, dec coordinates), I get different results each time it runs. And I’m starting it like this (verbatim what’s in the tutorial): 
+ pipetask run -b $RC2_SUBSET_DIR/SMALL_HSC/butler.yaml \
+             -p $RC2_SUBSET_DIR/pipelines/DRP.yaml#singleFrame \
+             -i HSC/RC2/defaults \
+             -o u/$USER/single_frame \
+             --register-dataset-types
+ 
+ What could be the explanation for this behavior? 
+ Thanks, 
+Petar","Hi, 
+I’m following this tutorial:  The LSST Science Pipelines — LSST Science Pipelines  and I’ve ran the first step “single_frame” task a few times. Each time it runs it produces different results: if I go through all calexps in the output collection ( butler.registry.queryDatasets(""calexp"", collections=collection) ), and look at their sky coverage (calexp width, height and WCS mapping), and then find the total coverage of the whole collection (max and min ra, dec coordinates), I get different results each time it runs. And I’m starting it like this (verbatim what’s in the tutorial): 
+ pipetask run -b $RC2_SUBSET_DIR/SMALL_HSC/butler.yaml \
+             -p $RC2_SUBSET_DIR/pipelines/DRP.yaml#singleFrame \
+             -i HSC/RC2/defaults \
+             -o u/$USER/single_frame \
+             --register-dataset-types
+ 
+ What could be the explanation for this behavior? 
+ Thanks, 
+Petar.","Hi, 
+I’m following this tutorial:  The LSST Science Pipelines — LSST Science Pipelines  and I’ve ran the first step “single_frame” task a few times. Each time it runs it produces different results: if I go through all calexps in the output collection ( butler.registry.queryDatasets(""calexp"", collections=collection) ), and look at their sky coverage (calexp width, height and WCS mapping), and then find the total coverage of the whole collection (max and min ra, dec coordinates), I get different results each time it runs. And I’m starting it like this (verbatim what’s in the tutorial): 
+ pipetask run -b $RC2_SUBSET_DIR/SMALL_HSC/butler.yaml \
+             -p $RC2_SUBSET_DIR/pipelines/DRP.yaml#singleFrame \
+             -i HSC/RC2/defaults \
+             -o u/$USER/single_frame \
+             --register-dataset-types
+ 
+ What could be the explanation for this behavior? 
+ Thanks, 
+Petar
+<issue_comment>username_1: Hi Petar,
+
+The ""single_frame"" task (the first one in the tutorial) doesn't make use of the sky coverage information for the data it processes. The ""single_frame"" task generates a single file for each data product, and outputs them only the single_frame.fits file. The single_frame.fits files contain a number of ""metadata"" tables which contain information about the individual data files that make up the single_frame.fits file. The sky coverage information stored in the metadata tables are used to generate the sky coverage images that you can see in the UI.
+
+If you want to generate sky coverage images for the individual data files that make up a single_frame.fits file, you need to run the ""singleFrame"" task. The ""singleFrame"" task is the next one in the tutorial. The ""singleFrame"" task generates the sky coverage images for each data product in","Hi, 
+I’m following this tutorial:  The LSST Science Pipelines — LSST Science Pipelines  and I’ve ran the first step “single_frame” task a few times. Each time it runs it produces different results: if I go through all calexps in the output collection ( butler.registry.queryDatasets(""calexp"", collections=collection) ), and look at their sky coverage (calexp width, height and WCS mapping), and then find the total coverage of the whole collection (max and min ra, dec coordinates), I get different results each time it runs. And I’m starting it like this (verbatim what’s in the tutorial): 
+ pipetask run -b $RC2_SUBSET_DIR/SMALL_HSC/butler.yaml \
+             -p $RC2_SUBSET_DIR/pipelines/DRP.yaml#singleFrame \
+             -i HSC/RC2/defaults \
+             -o u/$USER/single_frame \
+             --register-dataset-types
+ 
+ What could be the explanation for this behavior? 
+ Thanks, 
+Petar
+
+## [1] LSST single frame outputs
+When running the single_frame task, you're producing a subset of all available HSC datasets for analysis (modeled by the -i flag), and then outputting the results (modeled by the -o flag) in a consistent format.
+
+The output includes the sky coverage dimensions (width, height, and WCS mapping), and the total RA and Dec coverage. These outputs are computed using a variety of input datasets, and thus can produce different results each time the task runs.
+
+Here are a few possibilities for why different outputs may be observed:
+
+1. Different datasets: Each dataset may have slightly different sky coverage, image quality, and other characteristics. Running the task a few times with slightly different input datasets (modeled by -i flag) can lead to different outputs.
+
+2. Differing calibration: The calibration of the telescope and instruments can vary slightly between runs. This can affect how sky coverage is measured, leading to different results."
+"I have the following C++ class : 
+ class CcdImageList : public std::list  > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig ? )  to make it iterable ?","I have the following C++ class : 
+ class CcdImageList : public std::list  > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig ? )  to make it iterable ?
+
+I had to use a for loop, but I think the loop is not good. 
+Can I do something else?
+
+I will be very grateful for your help.  
+
+Best  
+
+-  J.F.","I have the following C++ class : 
+ class CcdImageList : public std::list  > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig ? )  to make it iterable ?
+
+A: In order to use C++ class in Python, make sure you have a C++ class with non-virtual destructor. If you don't have a good reason to use non-virtual destructor, the following code will work:
+class CcdImageList : public std::list >
+{
+public:
+    CcdImageList() : std::list() {}
+    CcdImageList(const CcdImageList &other) : std::list(other) {}
+    CcdImageList & operator=(const CcdImageList &other) { std::list::operator=(other); return *this; }
+    ~CcdImageList() { }
+};
+
+The destructor is not virtual as it's non-virtual.
+
+A: I don't see a good reason for a C++ destructor to be non-virtual.
+This would be a good reason:
+class CcdImageList :","I have the following C++ class : 
+ class CcdImageList : public std::list  > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig ? )  to make it iterable ? 
+
+Here is the code where I try to iterate on it :
+
+```cpp
+#include ""CcdImageList.h""
+
+for (auto &value : CcdImageList::get()) {
+    // stuff...
+}
+```
+
+This code does not work because the `CcdImageList` is not implemented to be iterable.
+
+**Solution:** Use `swig_py_list` instead of `std::list<>`. `swig_py_list` is a Swig type that is designed to be iterated over.
+
+Here is the modified code:
+
+```cpp
+#include ""CcdImageList.h""
+
+swig_py_list<CcdImageList> imageList;
+for (auto &value : imageList) {
+    // stuff...
+}
+```
+
+**Explanation:** `std::list<>` is an iteratorable container in C++, but `CcdImageList::get()` does not guarantee that `CcdImageList` instances are iteratorable. `swig_py_list` is specifically designed to"
+"Question on how forced photometry will be run on images taken  after  a DIAObject is detected. Again, using  LSE-163 Data Products and Definitions, Juric et al. 2019-07-29.   - section 3.2.1  states : 
+ “For all DIAObjects overlapping the field of view … forced photometry will be performed on the difference images. Those measurements will be stored as DIAForced- Sources. No alerts will be issued for these DIAForcedSources, but the DIAForcedSource measurements will be included in any future alerts triggered by a new DIASource at that location.” 
+ I take this to mean that a DIASource which is found with through the  DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ But what if the  DIAForcedSource produces a measurement S/N < 5 ?  Where will this information be stored - the Prompt Products Database ? 
+ If so, then 3 questions 
+ 
+ on what timescale will it be available, 24hrs ? 
+ For how long will such forced photometry be run ? The whole survey ? 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ A strong science case for accessing forced photometry after detection of a transient is fast declining transients e.g. kilonovae, NS-WD mergers. A detection followed by a non-detection is often as interesting as the other way round.","Question on how forced photometry will be run on images taken  after  a DIAObject is detected. Again, using  LSE-163 Data Products and Definitions, Juric et al. 2019-07-29.   - section 3.2.1  states : 
+ “For all DIAObjects overlapping the field of view … forced photometry will be performed on the difference images. Those measurements will be stored as DIAForced- Sources. No alerts will be issued for these DIAForcedSources, but the DIAForcedSource measurements will be included in any future alerts triggered by a new DIASource at that location.” 
+ I take this to mean that a DIASource which is found with through the  DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ But what if the  DIAForcedSource produces a measurement S/N < 5 ?  Where will this information be stored - the Prompt Products Database ? 
+ If so, then 3 questions 
+ 
+ on what timescale will it be available, 24hrs ? 
+ For how long will such forced photometry be run ? The whole survey ? 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ A strong science case for accessing forced photometry after detection of a transient is fast declining transients e.g. kilonovae, NS-WD mergers. A detection followed by a non-detection is often as interesting as the other way round. 
+ 
+ The question is:   
+ 1.   Can there be a way to store such observations in an alert? 
+    (a)  I know that prompt products are not public, but are there other ways to store such observations in alerts? 
+ 
+ 2.   Can such observations be stored in the Alerts database too? 
+ 
+ 3.   Can there be a way to flag such observations as “in the future, it will be observed”? 
+ 
+ 4.   Can the DIAForcedSource data be stored separately? 
+ 
+ 5.   Can the DIAForcedSource data be stored in the alert? 
+ 
+ 6.   Can the DIAForcedSource data be stored in a separate alert? 
+ 
+ 7.   Can the DIAForcedSource data be stored in the Alerts database  for the  future? 
+ 
+ 8.   Can the DIAForcedSource data be stored separately in the Alerts database  for the","Question on how forced photometry will be run on images taken  after  a DIAObject is detected. Again, using  LSE-163 Data Products and Definitions, Juric et al. 2019-07-29.   - section 3.2.1  states : 
+ “For all DIAObjects overlapping the field of view … forced photometry will be performed on the difference images. Those measurements will be stored as DIAForced- Sources. No alerts will be issued for these DIAForcedSources, but the DIAForcedSource measurements will be included in any future alerts triggered by a new DIASource at that location.” 
+ I take this to mean that a DIASource which is found with through the  DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ But what if the  DIAForcedSource produces a measurement S/N < 5 ?  Where will this information be stored - the Prompt Products Database ? 
+ If so, then 3 questions 
+ 
+ on what timescale will it be available, 24hrs ? 
+ For how long will such forced photometry be run ? The whole survey ? 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ A strong science case for accessing forced photometry after detection of a transient is fast declining transients e.g. kilonovae, NS-WD mergers. A detection followed by a non-detection is often as interesting as the other way round. 
+I would suggest that the following changes to the PPDB should be made: 
+ 
+ 1)  Forced photometry should be made available only after a DIASource is detected 
+ 2)  the same should be available after the discovery of a DIASource, but then only for a limited period of time, e.g. a week 
+3)  the results should be available in the form of a CSV file (along with other data from the PPDB)
+4)  if the forced photometry is to be made available,  the force photometry should include only the photometric measurements from the DIAForcedSource.  So the PPDB should include only the  DIAForcedSources and not the  DIAForcedPhotometry. 
+5)  the file should include the information in a standard format such as the  NASA/IPAC Extragalactic Database (NED) format. 
+6)  the","Question on how forced photometry will be run on images taken  after  a DIAObject is detected. Again, using  LSE-163 Data Products and Definitions, Juric et al. 2019-07-29.   - section 3.2.1  states : 
+ “For all DIAObjects overlapping the field of view … forced photometry will be performed on the difference images. Those measurements will be stored as DIAForced- Sources. No alerts will be issued for these DIAForcedSources, but the DIAForcedSource measurements will be included in any future alerts triggered by a new DIASource at that location.” 
+ I take this to mean that a DIASource which is found with through the  DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ But what if the  DIAForcedSource produces a measurement S/N < 5 ?  Where will this information be stored - the Prompt Products Database ? 
+ If so, then 3 questions 
+ 
+ on what timescale will it be available, 24hrs ? 
+ For how long will such forced photometry be run ? The whole survey ? 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ A strong science case for accessing forced photometry after detection of a transient is fast declining transients e.g. kilonovae, NS-WD mergers. A detection followed by a non-detection is often as interesting as the other way round. How would such information be made publicly accessible?
+
+### Answer 1
+
+The information on forced photometry will be stored in the Prompt Products Database (PPDB). The PPDB is designed to store data from all DIAObjects and events and is accessible via the DIAWeb portal. The PPDB is managed by the DIA Data Analysis Team (DATT), and it is updated regularly with new data products and their associated information.
+
+The PPDB is available 24hrs a day and is maintained for the entire life of the survey. The data will be stored for as long as necessary to meet current and future requirements. While the PPDB is not publicly available to the general public, it is widely used within the scientific community for data analysis and research purposes.
+
+### Answer 2
+
+Forced photometry will be run for the entire duration of the survey. This means that the forced photometry data will be available for analysis for the entire survey duration.
+
+### Answer 3
+
+The information on"
+"Hi there, 
+ Is there some way I find out what butler repos are available to me? Or, more specifically, how can I list all the values for X that I can put into  butler = dafButler.Butler(X, collections='2.2i/runs/DP0.2') . How can I find out, for example, that I  can  put  dp02  in there, but not, say,   dp85 ? 
+ Thanks! 
+ James","Hi there, 
+ Is there some way I find out what butler repos are available to me? Or, more specifically, how can I list all the values for X that I can put into  butler = dafButler.Butler(X, collections='2.2i/runs/DP0.2') . How can I find out, for example, that I  can  put  dp02  in there, but not, say,   dp85 ? 
+ Thanks! 
+ James","Hi there, 
+ Is there some way I find out what butler repos are available to me? Or, more specifically, how can I list all the values for X that I can put into  butler = dafButler.Butler(X, collections='2.2i/runs/DP0.2') . How can I find out, for example, that I  can  put  dp02  in there, but not, say,   dp85 ? 
+ Thanks! 
+ James
+I would be interested in this too. I'm not sure if this is a dumb question, but where does the repository come from? Is it something that you can add yourself?","Hi there, 
+ Is there some way I find out what butler repos are available to me? Or, more specifically, how can I list all the values for X that I can put into  butler = dafButler.Butler(X, collections='2.2i/runs/DP0.2') . How can I find out, for example, that I  can  put  dp02  in there, but not, say,   dp85 ? 
+ Thanks! 
+ James
+
+
+The `dafButler` package provides several functions for working with Butler experiments, including specifying and filtering butler results.
+
+To list all available butler experiment values, you can use the `all_experiments` function from `dafButler`. This function returns a list of all available experiments (butler results):
+
+```python
+import dafButler
+all_experiments = dafButler.all_experiments()
+
+for experiment in all_experiments:
+    print(experiment)
+```
+
+This will print all available experiments (butler results) to the console.
+
+To filter the results to include only those that match a specific value, you can use the `filter` function from `dafButler`. For example, to get results that contain the value 'dp02':
+
+```python
+filtered_experiments = dafButler.filter(experiment for experiment in all_experiments if experiment['value'] == 'dp02')
+```
+
+Or, if you want to exclude results with"
+"I’m having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? 
+ I’ve tried just copying a few of the .texi files from  https://github.com/FFTW/fftw3/tree/master/doc  into my LSST directory but this does not seem to work. I’ve tried aliasing ‘makeinfo’ away but that is not working. Any suggestions?","I’m having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? 
+ I’ve tried just copying a few of the .texi files from  https://github.com/FFTW/fftw3/tree/master/doc  into my LSST directory but this does not seem to work. I’ve tried aliasing ‘makeinfo’ away but that is not working. Any suggestions?
+I have just installed FFTW3.2.1 on top of FFTW3.3.0. It works fine on my machine.
+I have just installed FFTW3.2.1 on top of FFTW3.3.0. It works fine on my machine.
+That's good to hear. Thanks for the update.
+So we have to wait for FFTW 3.4.1 before we can use FFTW 3.3.4?
+@matt.carr : I am not sure. I am not sure if the new version of FFTW is being shipped with LSST or not, and whether we will be able to install it. I will ping @matt.carr and @daniel.haskell to find out.
+As far as I know, FFTW 3.4.1 will be packaged with LSST.
+I am not sure if the new version of","I’m having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? 
+ I’ve tried just copying a few of the .texi files from  https://github.com/FFTW/fftw3/tree/master/doc  into my LSST directory but this does not seem to work. I’ve tried aliasing ‘makeinfo’ away but that is not working. Any suggestions?
+<issue_comment>username_1: I have the same problem. I tried to install FFTW 3.3.4, but I still get the same error.
+I will try to reinstall the FFTW 3.3.3.
+<issue_comment>username_0: Hi @username_1,
+
+I haven't tried installing 3.3.4 yet. Do you just mean the git master?
+
+Thanks,
+
+Steve
+<issue_comment>username_1: No, I mean the FFTW package from our distribution. I tried to install from the FFTW webpage, but I got the same error.
+<issue_comment>username_0: Ok, I’ll try installing 3.3.4 and see if that helps.
+
+Steve
+<issue_comment>username_1: I tried to install 3.3.4, but this is the error I got:","I’m having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? 
+ I’ve tried just copying a few of the .texi files from  https://github.com/FFTW/fftw3/tree/master/doc  into my LSST directory but this does not seem to work. I’ve tried aliasing ‘makeinfo’ away but that is not working. Any suggestions? 
+
+• If I need FFTW for a specific application, can I just download FFTW 3.3.4 and link it manually? 
+
+• If I change the default FFTW version in the Texinfo setup file (not the Makefile), what are the implications for future versions of Texinfo?
+
+• Is there a reliable way to check if FFTW is installed? Or does this require compiling something?
+
+I’d really appreciate any guidance you can provide regarding this issue.
+```output
+$ lsfftw
+README  INSTALL  Makefile  Makefile.dynamize  Makefile.old  doc  doc/info  doc/texinfo  src
+```
+```
+Based on your findings, I have a few questions:
+
+1. Is there a known way to ensure FFTW is correctly installed on my system, aside from linking it manually or changing the default version in the Texinfo setup file?
+
+2. The README file suggests installing FFTW via `./configure` and `make"
