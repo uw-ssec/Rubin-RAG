@@ -1,0 +1,1754 @@
+question,true_answer,OLMo-1B,RAG_OLMo-1B,OLMo-1B-0724-hf,RAG_OLMo-1B-0724-hf,OLMo-2-0425-1B-Instruct,RAG_OLMo-2-0425-1B-Instruct,OLMo-1B_cosine,RAG_OLMo-1B_cosine,OLMo-1B-0724-hf_cosine,RAG_OLMo-1B-0724-hf_cosine,OLMo-2-0425-1B-Instruct_cosine,RAG_OLMo-2-0425-1B-Instruct_cosine
+"Hi, 
+Iâm following this tutorial:  The LSST Science Pipelines â LSST Science Pipelines  and Iâve ran the first step âsingle_frameâ task a few times. Each time it runs it produces different results: if I go through all calexps in the output collection ( butler.registry.queryDatasets(""calexp"", collections=collection) ), and look at their sky coverage (calexp width, height and WCS mapping), and then find the total coverage of the whole collection (max and min ra, dec coordinates), I get different results each time it runs. And Iâm starting it like this (verbatim whatâs in the tutorial): 
+ pipetask run -b $RC2_SUBSET_DIR/SMALL_HSC/butler.yaml \
+             -p $RC2_SUBSET_DIR/pipelines/DRP.yaml#singleFrame \
+             -i HSC/RC2/defaults \
+             -o u/$USER/single_frame \
+             --register-dataset-types
+ 
+ What could be the explanation for this behavior? 
+ Thanks, 
+Petar","Quick comment on the code: 
+ 
+ 
+ 
+  petarz: 
+ 
+ calexp = butler.get('calexp', dataId=ref.dataId.full, collections=in_collection) 
+ 
+ 
+ Use  calexp = butler.getDirect(ref)  to get the actual dataset that the query has returned. Otherwise butler does a whole new query and so will very likely not return the thing that your ref is really associated with (because the query will return all matching datasets in those collections but the  .get()  will return the first match in the given collections).  (you also should not need to use  ref.dataid.full  Ð  ref.dataid  should be sufficient). 
+ 
+ 
+ 
+  petarz: 
+ 
+ mjd = calexp.getMetadata().toDict()['MJD'] 
+ 
+ 
+ The  toDict  is not needed.  mjd = calexp.getMetadata()[""MJD""]  has worked for a few years now. 
+ 
+ 
+ 
+  petarz: 
+ 
+ w, h = calexp.width, calexp.height 
+ 
+ 
+ You should use  getBBox()  to get the bounding box and then use the upper and lower bounds from that rather than assuming 0,0.","Hi, 
+Iâm following this tutorial:  The LSST Science Pipelines â LSST Science Pipelines  and Iâve ran the first step âsingle_frameâ task a few times. Each time it runs it produces different results: if I go through all calexps in the output collection ( butler.registry.queryDatasets(""calexp"", collections=collection) ), and look at their sky coverage (calexp width, height and WCS mapping), and then find the total coverage of the whole collection (max and min ra, dec coordinates), I get different results each time it runs. And Iâm starting it like this (verbatim whatâs in the tutorial): 
+ pipetask run -b $RC2_SUBSET_DIR/SMALL_HSC/butler.yaml \
+             -p $RC2_SUBSET_DIR/pipelines/DRP.yaml#singleFrame \
+             -i HSC/RC2/defaults \
+             -o u/$USER/single_frame \
+             --register-dataset-types
+ 
+ What could be the explanation for this behavior? 
+ Thanks, 
+Petar.","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+Draft
+LVV-P106: Data Management Acceptance Test Campaign, Fall 2023 Test Plan and Report | DMTR-401 | Latest Revision 2024-03-25
+Actual Result
+Run the same query as before, but specifying the exact collection that the results were saved into:
+butler query-datasets /repo/main calexp --collections u/jcarlin/LVV-T142_test/20231102T233609Z | grep âcalexpâ
+| wc
+240
+1920 31680
+We see that this execution brought the total to 240 calexps, as expected. We have thus demonstrated that the
+batch processing system (BPS) at the USDF successfully recovers jobs that fail before they have completed.
+5.1.3.11
+LVV-T1748 - Verify calculation of median error in absolute position for RA, Dec
+axes
+Version 1. Status Approved. Open LVV-T1748 test case in Jira.
+Verify that the DM system has provided the code to calculate the median error in absolute
+position for each axis, RA and DEC, and assess whether it meets the requirement that it shall
+be less than AA1 = 50 milliarcseconds.
+Preconditions:
+Execution status:
+Final comment:
+Detailed steps results LVV-C260-LVV-T1748 LVV-E2973-3368:
+Note: Steps âNot Executedâ and with No Result are not shown in this report.
+Step LVV-E2973-1
+Step Execution Status: Pass
+Description
+Identify a dataset containing processed data.
+Expected Result
+A dataset that has been ingested into a Butler repository.
+D R A F T
+49
+D R A F T
+
+
+LDM-GEN3: Gen 3 Butler Acceptance Testing Test Plan and Report | DMTR-271 | Latest Revision 2022-07-08
+Examine the âcalexpâ and âwcsâ to conï¬rm that they are diï¬erent:
+In [6]: calexp
+Out[6]: <lsst.afw.image.exposure.ExposureF at 0x7fc6d9b83130>
+As expected, the calexp is an ExposureF object.
+In [7]: wcs
+Out[7]:
+FITS standard SkyWcs:
+Sky Origin: (149.8520271457, +2.0585702399)
+Pixel Origin: (1003.05, 2415.24)
+Pixel Scale: 0.16713 arcsec/pixel
+The WCS looks like a properly deï¬ned WCS. Now look at the image plane of the calexp:
+In [8]: calexp.image
+Out[8]:
+lsst.afw.image.image.ImageF=[[ -0.36441362 -0.3609193 -0.35746038 â¦ -25.336197 -25.346905
+-25.357626 ]
+[ -0.3578999 -0.354396 -0.3511718 â¦ -25.327019 -25.337673
+-25.348345 ]
+[ -0.3513667 -0.34809738 -0.34461957 â¦ -25.317785 -25.328388
+-25.339252 ]
+â¦
+[ 28.878033 28.84473 28.811472 â¦ 7.566758 7.5311904
+7.4954834 ]
+[ 28.914822 28.88162 28.848219 â¦ 7.5671864 7.5316124
+7.4958982 ]
+[ 28.951662 28.918072 28.884766 â¦ 7.567666 7.5320854
+7.4963655 ]], bbox=(minimum=(0, 0), maximum=(2047, 4175))
+These look good. We have thus demonstrated that the data products of Data Release Production performed on
+the Batch Processing System at NCSA can be retrieved on the LSST development machines at NCSA.
+5.3.3.4
+LVV-T2499 - Verify Consistent Output Interface
+51
+
+
+Question: Hi, 
+Iâm following this tutorial:  The LSST Science Pipelines â LSST Science Pipelines  and Iâve ran the first step âsingle_frameâ task a few times. Each time it runs it produces different results: if I go through all calexps in the output collection ( butler.registry.queryDatasets(""calexp"", collections=collection) ), and look at their sky coverage (calexp width, height and WCS mapping), and then find the total coverage of the whole collection (max and min ra, dec coordinates), I get different results each time it runs. And Iâm starting it like this (verbatim whatâs in the tutorial): 
+ pipetask run -b $RC2_SUBSET_DIR/SMALL_HSC/butler.yaml \
+             -p $RC2_SUBSET_DIR/pipelines/DRP.yaml#singleFrame \
+             -i HSC/RC2/defaults \
+             -o u/$USER/single_frame \
+             --register-dataset-types
+ 
+ What could be the explanation for this behavior? 
+ Thanks, 
+Petar
+
+Answer:
+I think you may have missed a step in the tutorial. The output of multiple tasks at the same time can interfere with each other because of the way the task is structured and the way the data is passed to the task.
+It is recommended that all data science work should be done in isolated tasks and that all data science work should be done in isolated pipelines. This is what the tutorial is trying to teach you.
+The way the data is passed to the data science workflow is by specifying a collection of task ids and passing them to the data science workflow. In the example above, there is a task with multiple inputs and outputs. If you have multiple tasks with multiple inputs and outputs, you should pass them to the data science workflow by specifying the collection of task ids that are going to be used for each task in the pipeline.
+The reason this is important is that the data science workflow will not be able to know which data science workflow to run a certain task because they are running on different tasks. This is the reason why the data science workflow is run on a data science workflow. In the example above, the task id that runs this data science workflow is 4. The task id that runs the data science workflow is 5. Which means that","Hi, 
+Iâm following this tutorial:  The LSST Science Pipelines â LSST Science Pipelines  and Iâve ran the first step âsingle_frameâ task a few times. Each time it runs it produces different results: if I go through all calexps in the output collection ( butler.registry.queryDatasets(""calexp"", collections=collection) ), and look at their sky coverage (calexp width, height and WCS mapping), and then find the total coverage of the whole collection (max and min ra, dec coordinates), I get different results each time it runs. And Iâm starting it like this (verbatim whatâs in the tutorial): 
+ pipetask run -b $RC2_SUBSET_DIR/SMALL_HSC/butler.yaml \
+             -p $RC2_SUBSET_DIR/pipelines/DRP.yaml#singleFrame \
+             -i HSC/RC2/defaults \
+             -o u/$USER/single_frame \
+             --register-dataset-types
+ 
+ What could be the explanation for this behavior? 
+ Thanks, 
+Petar
+<issue_comment>username_1: Hi Petar,
+
+The ""single_frame"" task (the first one in the tutorial) doesn't make use of the sky coverage information for the data it processes. The ""single_frame"" task generates a single file for each data product, and outputs them only the single_frame.fits file. The single_frame.fits files contain a number of ""metadata"" tables which contain information about the individual data files that make up the single_frame.fits file. The sky coverage information stored in the metadata tables are used to generate the sky coverage images that you can see in the UI.
+
+If you want to generate sky coverage images for the individual data files that make up a single_frame.fits file, you need to run the ""singleFrame"" task. The ""singleFrame"" task is the next one in the tutorial. The ""singleFrame"" task generates the sky coverage images for each data product in","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+Draft
+LVV-P106: Data Management Acceptance Test Campaign, Fall 2023 Test Plan and Report | DMTR-401 | Latest Revision 2024-03-25
+Actual Result
+Run the same query as before, but specifying the exact collection that the results were saved into:
+butler query-datasets /repo/main calexp --collections u/jcarlin/LVV-T142_test/20231102T233609Z | grep âcalexpâ
+| wc
+240
+1920 31680
+We see that this execution brought the total to 240 calexps, as expected. We have thus demonstrated that the
+batch processing system (BPS) at the USDF successfully recovers jobs that fail before they have completed.
+5.1.3.11
+LVV-T1748 - Verify calculation of median error in absolute position for RA, Dec
+axes
+Version 1. Status Approved. Open LVV-T1748 test case in Jira.
+Verify that the DM system has provided the code to calculate the median error in absolute
+position for each axis, RA and DEC, and assess whether it meets the requirement that it shall
+be less than AA1 = 50 milliarcseconds.
+Preconditions:
+Execution status:
+Final comment:
+Detailed steps results LVV-C260-LVV-T1748 LVV-E2973-3368:
+Note: Steps âNot Executedâ and with No Result are not shown in this report.
+Step LVV-E2973-1
+Step Execution Status: Pass
+Description
+Identify a dataset containing processed data.
+Expected Result
+A dataset that has been ingested into a Butler repository.
+D R A F T
+49
+D R A F T
+
+
+LDM-GEN3: Gen 3 Butler Acceptance Testing Test Plan and Report | DMTR-271 | Latest Revision 2022-07-08
+Examine the âcalexpâ and âwcsâ to conï¬rm that they are diï¬erent:
+In [6]: calexp
+Out[6]: <lsst.afw.image.exposure.ExposureF at 0x7fc6d9b83130>
+As expected, the calexp is an ExposureF object.
+In [7]: wcs
+Out[7]:
+FITS standard SkyWcs:
+Sky Origin: (149.8520271457, +2.0585702399)
+Pixel Origin: (1003.05, 2415.24)
+Pixel Scale: 0.16713 arcsec/pixel
+The WCS looks like a properly deï¬ned WCS. Now look at the image plane of the calexp:
+In [8]: calexp.image
+Out[8]:
+lsst.afw.image.image.ImageF=[[ -0.36441362 -0.3609193 -0.35746038 â¦ -25.336197 -25.346905
+-25.357626 ]
+[ -0.3578999 -0.354396 -0.3511718 â¦ -25.327019 -25.337673
+-25.348345 ]
+[ -0.3513667 -0.34809738 -0.34461957 â¦ -25.317785 -25.328388
+-25.339252 ]
+â¦
+[ 28.878033 28.84473 28.811472 â¦ 7.566758 7.5311904
+7.4954834 ]
+[ 28.914822 28.88162 28.848219 â¦ 7.5671864 7.5316124
+7.4958982 ]
+[ 28.951662 28.918072 28.884766 â¦ 7.567666 7.5320854
+7.4963655 ]], bbox=(minimum=(0, 0), maximum=(2047, 4175))
+These look good. We have thus demonstrated that the data products of Data Release Production performed on
+the Batch Processing System at NCSA can be retrieved on the LSST development machines at NCSA.
+5.3.3.4
+LVV-T2499 - Verify Consistent Output Interface
+51
+
+
+Question: Hi, 
+Iâm following this tutorial:  The LSST Science Pipelines â LSST Science Pipelines  and Iâve ran the first step âsingle_frameâ task a few times. Each time it runs it produces different results: if I go through all calexps in the output collection ( butler.registry.queryDatasets(""calexp"", collections=collection) ), and look at their sky coverage (calexp width, height and WCS mapping), and then find the total coverage of the whole collection (max and min ra, dec coordinates), I get different results each time it runs. And Iâm starting it like this (verbatim whatâs in the tutorial): 
+ pipetask run -b $RC2_SUBSET_DIR/SMALL_HSC/butler.yaml \
+             -p $RC2_SUBSET_DIR/pipelines/DRP.yaml#singleFrame \
+             -i HSC/RC2/defaults \
+             -o u/$USER/single_frame \
+             --register-dataset-types
+ 
+ What could be the explanation for this behavior? 
+ Thanks, 
+Petar
+
+A: The tutorial you're following is for the old version of the LSST Science Pipelines.
+The current version is different. In particular, a single run produces a folder with one.fits image file per exposure, which is then processed into a single image. If you do this, you'll find that the sky coverage is the same, and you can run the command again and it'll return the same result.
+This is because the.fits images have been processed into a single image, using the same sky coverage, sky pixels, and WCS.","Hi, 
+Iâm following this tutorial:  The LSST Science Pipelines â LSST Science Pipelines  and Iâve ran the first step âsingle_frameâ task a few times. Each time it runs it produces different results: if I go through all calexps in the output collection ( butler.registry.queryDatasets(""calexp"", collections=collection) ), and look at their sky coverage (calexp width, height and WCS mapping), and then find the total coverage of the whole collection (max and min ra, dec coordinates), I get different results each time it runs. And Iâm starting it like this (verbatim whatâs in the tutorial): 
+ pipetask run -b $RC2_SUBSET_DIR/SMALL_HSC/butler.yaml \
+             -p $RC2_SUBSET_DIR/pipelines/DRP.yaml#singleFrame \
+             -i HSC/RC2/defaults \
+             -o u/$USER/single_frame \
+             --register-dataset-types
+ 
+ What could be the explanation for this behavior? 
+ Thanks, 
+Petar
+
+## [1] LSST single frame outputs
+When running the single_frame task, you're producing a subset of all available HSC datasets for analysis (modeled by the -i flag), and then outputting the results (modeled by the -o flag) in a consistent format.
+
+The output includes the sky coverage dimensions (width, height, and WCS mapping), and the total RA and Dec coverage. These outputs are computed using a variety of input datasets, and thus can produce different results each time the task runs.
+
+Here are a few possibilities for why different outputs may be observed:
+
+1. Different datasets: Each dataset may have slightly different sky coverage, image quality, and other characteristics. Running the task a few times with slightly different input datasets (modeled by -i flag) can lead to different outputs.
+
+2. Differing calibration: The calibration of the telescope and instruments can vary slightly between runs. This can affect how sky coverage is measured, leading to different results.","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+Draft
+LVV-P106: Data Management Acceptance Test Campaign, Fall 2023 Test Plan and Report | DMTR-401 | Latest Revision 2024-03-25
+Actual Result
+Run the same query as before, but specifying the exact collection that the results were saved into:
+butler query-datasets /repo/main calexp --collections u/jcarlin/LVV-T142_test/20231102T233609Z | grep âcalexpâ
+| wc
+240
+1920 31680
+We see that this execution brought the total to 240 calexps, as expected. We have thus demonstrated that the
+batch processing system (BPS) at the USDF successfully recovers jobs that fail before they have completed.
+5.1.3.11
+LVV-T1748 - Verify calculation of median error in absolute position for RA, Dec
+axes
+Version 1. Status Approved. Open LVV-T1748 test case in Jira.
+Verify that the DM system has provided the code to calculate the median error in absolute
+position for each axis, RA and DEC, and assess whether it meets the requirement that it shall
+be less than AA1 = 50 milliarcseconds.
+Preconditions:
+Execution status:
+Final comment:
+Detailed steps results LVV-C260-LVV-T1748 LVV-E2973-3368:
+Note: Steps âNot Executedâ and with No Result are not shown in this report.
+Step LVV-E2973-1
+Step Execution Status: Pass
+Description
+Identify a dataset containing processed data.
+Expected Result
+A dataset that has been ingested into a Butler repository.
+D R A F T
+49
+D R A F T
+
+
+LDM-GEN3: Gen 3 Butler Acceptance Testing Test Plan and Report | DMTR-271 | Latest Revision 2022-07-08
+Examine the âcalexpâ and âwcsâ to conï¬rm that they are diï¬erent:
+In [6]: calexp
+Out[6]: <lsst.afw.image.exposure.ExposureF at 0x7fc6d9b83130>
+As expected, the calexp is an ExposureF object.
+In [7]: wcs
+Out[7]:
+FITS standard SkyWcs:
+Sky Origin: (149.8520271457, +2.0585702399)
+Pixel Origin: (1003.05, 2415.24)
+Pixel Scale: 0.16713 arcsec/pixel
+The WCS looks like a properly deï¬ned WCS. Now look at the image plane of the calexp:
+In [8]: calexp.image
+Out[8]:
+lsst.afw.image.image.ImageF=[[ -0.36441362 -0.3609193 -0.35746038 â¦ -25.336197 -25.346905
+-25.357626 ]
+[ -0.3578999 -0.354396 -0.3511718 â¦ -25.327019 -25.337673
+-25.348345 ]
+[ -0.3513667 -0.34809738 -0.34461957 â¦ -25.317785 -25.328388
+-25.339252 ]
+â¦
+[ 28.878033 28.84473 28.811472 â¦ 7.566758 7.5311904
+7.4954834 ]
+[ 28.914822 28.88162 28.848219 â¦ 7.5671864 7.5316124
+7.4958982 ]
+[ 28.951662 28.918072 28.884766 â¦ 7.567666 7.5320854
+7.4963655 ]], bbox=(minimum=(0, 0), maximum=(2047, 4175))
+These look good. We have thus demonstrated that the data products of Data Release Production performed on
+the Batch Processing System at NCSA can be retrieved on the LSST development machines at NCSA.
+5.3.3.4
+LVV-T2499 - Verify Consistent Output Interface
+51
+
+
+Question: Hi, 
+Iâm following this tutorial:  The LSST Science Pipelines â LSST Science Pipelines  and Iâve ran the first step âsingle_frameâ task a few times. Each time it runs it produces different results: if I go through all calexps in the output collection ( butler.registry.queryDatasets(""calexp"", collections=collection) ), and look at their sky coverage (calexp width, height and WCS mapping), and then find the total coverage of the whole collection (max and min ra, dec coordinates), I get different results each time it runs. And Iâm starting it like this (verbatim whatâs in the tutorial): 
+ pipetask run -b $RC2_SUBSET_DIR/SMALL_HSC/butler.yaml \
+             -p $RC2_SUBSET_DIR/pipelines/DRP.yaml#singleFrame \
+             -i HSC/RC2/defaults \
+             -o u/$USER/single_frame \
+             --register-dataset-types
+ 
+ What could be the explanation for this behavior? 
+ Thanks, 
+Petar
+## Answer
+The explanation for this behavior is likely related to the randomness of the initial conditions set for the single_frame task. Each time the task runs, different subsets of data might be loaded into the pipeline, leading to variations in the results. Additionally, the pipeline might be running in parallel on different machines with potentially different configurations or initial datasets loaded. The tutorial you're following suggests that you should repeat the single_frame task as part of your routine, as it's important to ensure consistency and reproducibility in your analysis. 
+
+To further investigate and minimize variance, you may want to:
+1. Set the initial conditions (e.g., the list of datasets, filters, or subset selection) more explicitly to avoid randomness.
+2. Verify that the same dataset is always loaded into the pipeline for each run.
+3. Ensure that the same configuration of the pipeline is used across all runs if possible. 
+
+By understanding the potential sources of variability and taking steps to minimize them, you can gain more reliable insights from your LSST analysis pipeline.",0.21242606273726614,0.304510325185209,0.2380577541409402,0.2974234325093133,0.20068077707569798,0.3117630336534152
+"I have the following C++ class : 
+ class CcdImageList : public std::list  > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig ? )  to make it iterable ?","After several iteration with  @ktl  and  @rowen  we finally solved this. The Swig interface should contain: 
+ %include ""lsst/meas/simastrom/CountedRef.h""
+%template(CcdImageCountedRef) lsst::meas::simastrom::CountedRef ;
+%template(CcdImageCountedRefList) std::list  >;
+%include ""lsst/meas/simastrom/CcdImage.h""
+ 
+ In this order. The bottom line is that Swig is processing the .i file in one single pass, so every ÒobjectÓ should be known before being used.","I have the following C++ class : 
+ class CcdImageList : public std::list  > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig ? )  to make it iterable ?
+
+I had to use a for loop, but I think the loop is not good. 
+Can I do something else?
+
+I will be very grateful for your help.  
+
+Best  
+
+-  J.F.","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+In most cases, the SWIG files from the current stack will contain the necessary python code and
+one can simply copy and paste the code from the SWIG file into the new python file with little
+modification.
+Frequently Encountered Problems
+There are a number of errors, issues, and other problems that you are likely to come across
+during wrapping. This section has some hints on what might be causing a particular problem you
+are encountering.
+Casting
+SWIG and pybind11 handle inheritance in different ways. In SWIG, if a class B inherits from A, a
+pointer that clones B can return a type A, which is undesirable. There was a lot of machinery,
+including a .cast  method that was used to recase A as B. This is not necessary with pybind11 so
+all casting procedures can be removed (or at the very least commented out) and tests for casting
+can be skipped with a @unittest.skip(""Skip for pybind11"") .
+Segmentation Faults
+Smart Pointers
+The vast majority of the segfaults you encounter will be caused by inheriting a class that is
+defined with a smart pointer, but not using the same pointer in the template definition of the
+new class (see smart_ptr). For example if a class A is defined using
+py::class_<A, std::shared_ptr<A>> clsA(mod, ""A"");
+then a class B that inherits from A must include std::shared_ptr<B> :
+py::class_<B, std::shared_ptr<B>, A> clsB(mod, ""B"");
+NDArrays
+The other main cause of segfaults is forgetting to include
+Loading [MathJax]/extensions/tex2jax.js
+
+
+def _getitem_(self, index):
+    """"""
+    operator[] in C++ only returns a single item, but `Array` has a method to get a slice of the
+    array. To make the code more python we automatically check for a slice and return either
+    a single item or slice as requested by the user.
+    """"""
+    if isinstance(index, slice):
+        start, stop, stride = index.indices(self.getSize())
+        if stride != 1:
+            raise IndexError(""Non-unit stride not supported"")
+        return self.slice(start, stop)
+    return self._get_(index)
+which uses the getSize , slice , and _get_  methods defined in the pybind11 wrapper to
+generate a slice (if necessary). To make this the __getitem__  method in ArrayFKey  and ArrayIKey
+we add
+ArrayFKey.__getitem__ = _getitem_
+ArrayDKey.__getitem__ = _getitem_
+del _getitem_
+which assigns the __getitem__  method to the classes and deletes the temporary function so that
+it doesnât pollute the namespace. Finally we must add from .arrays import *  to tableLib.py  to
+ensure that the stack updates both classes. The complete arrays.py  file should be
+from __future__ import absolute_import, division, print_function
+from ._arrays import ArrayFKey, ArrayDKey
+def _getitem_(self, index):
+    """"""
+    operator[] in C++ only returns a single item, but `Array` has a method to get a slice of the
+    array. To make the code more python we automatically check for a slice and return either
+    a single item or slice as requested by the user.
+    """"""
+    if isinstance(index, slice):
+        start, stop, stride = index.indices(self.getSize())
+        if stride != 1:
+            raise IndexError(""Non-unit stride not supported"")
+        return self.slice(start, stop)
+    return self._get_(index)
+ArrayFKey.__getitem__ = _getitem_
+ArrayDKey.__getitem__ = _getitem_
+Loading [MathJax]/extensions/tex2jax.js
+
+
+Question: I have the following C++ class : 
+ class CcdImageList : public std::list  > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig ? )  to make it iterable ?
+
+I'm not sure that this is the right place for this question, but I couldn't find something similar.
+I have a C++ program that generates a Python list. It is very simple, just a loop to generate a
+new list every time the loop is executed.
+
+I would like to be able to iterate over it, so I use the following class : 
+class CcdImageList(list): 
+def get_image(self):
+    """"""
+    This is the same as get_item (in the C API).
+    """"""
+    return self._get(item)
+The problem I have is that if I iterate over the list, I must call get_item.
+I also tried to use iter(self)  but it doesn't work.
+I've also tried to create a new class with CcdImageList(self)  but it doesn't work either.
+The only way I can do it is to use a wrapper class  such as CcdImageListWrapper 
+  and I should pass the class to the python  object to make it iterable.
+
+What's the best way to do it?
+
+The loop is generated by a for loop.","I have the following C++ class : 
+ class CcdImageList : public std::list  > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig ? )  to make it iterable ?
+
+A: In order to use C++ class in Python, make sure you have a C++ class with non-virtual destructor. If you don't have a good reason to use non-virtual destructor, the following code will work:
+class CcdImageList : public std::list >
+{
+public:
+    CcdImageList() : std::list() {}
+    CcdImageList(const CcdImageList &other) : std::list(other) {}
+    CcdImageList & operator=(const CcdImageList &other) { std::list::operator=(other); return *this; }
+    ~CcdImageList() { }
+};
+
+The destructor is not virtual as it's non-virtual.
+
+A: I don't see a good reason for a C++ destructor to be non-virtual.
+This would be a good reason:
+class CcdImageList :","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+In most cases, the SWIG files from the current stack will contain the necessary python code and
+one can simply copy and paste the code from the SWIG file into the new python file with little
+modification.
+Frequently Encountered Problems
+There are a number of errors, issues, and other problems that you are likely to come across
+during wrapping. This section has some hints on what might be causing a particular problem you
+are encountering.
+Casting
+SWIG and pybind11 handle inheritance in different ways. In SWIG, if a class B inherits from A, a
+pointer that clones B can return a type A, which is undesirable. There was a lot of machinery,
+including a .cast  method that was used to recase A as B. This is not necessary with pybind11 so
+all casting procedures can be removed (or at the very least commented out) and tests for casting
+can be skipped with a @unittest.skip(""Skip for pybind11"") .
+Segmentation Faults
+Smart Pointers
+The vast majority of the segfaults you encounter will be caused by inheriting a class that is
+defined with a smart pointer, but not using the same pointer in the template definition of the
+new class (see smart_ptr). For example if a class A is defined using
+py::class_<A, std::shared_ptr<A>> clsA(mod, ""A"");
+then a class B that inherits from A must include std::shared_ptr<B> :
+py::class_<B, std::shared_ptr<B>, A> clsB(mod, ""B"");
+NDArrays
+The other main cause of segfaults is forgetting to include
+Loading [MathJax]/extensions/tex2jax.js
+
+
+def _getitem_(self, index):
+    """"""
+    operator[] in C++ only returns a single item, but `Array` has a method to get a slice of the
+    array. To make the code more python we automatically check for a slice and return either
+    a single item or slice as requested by the user.
+    """"""
+    if isinstance(index, slice):
+        start, stop, stride = index.indices(self.getSize())
+        if stride != 1:
+            raise IndexError(""Non-unit stride not supported"")
+        return self.slice(start, stop)
+    return self._get_(index)
+which uses the getSize , slice , and _get_  methods defined in the pybind11 wrapper to
+generate a slice (if necessary). To make this the __getitem__  method in ArrayFKey  and ArrayIKey
+we add
+ArrayFKey.__getitem__ = _getitem_
+ArrayDKey.__getitem__ = _getitem_
+del _getitem_
+which assigns the __getitem__  method to the classes and deletes the temporary function so that
+it doesnât pollute the namespace. Finally we must add from .arrays import *  to tableLib.py  to
+ensure that the stack updates both classes. The complete arrays.py  file should be
+from __future__ import absolute_import, division, print_function
+from ._arrays import ArrayFKey, ArrayDKey
+def _getitem_(self, index):
+    """"""
+    operator[] in C++ only returns a single item, but `Array` has a method to get a slice of the
+    array. To make the code more python we automatically check for a slice and return either
+    a single item or slice as requested by the user.
+    """"""
+    if isinstance(index, slice):
+        start, stop, stride = index.indices(self.getSize())
+        if stride != 1:
+            raise IndexError(""Non-unit stride not supported"")
+        return self.slice(start, stop)
+    return self._get_(index)
+ArrayFKey.__getitem__ = _getitem_
+ArrayDKey.__getitem__ = _getitem_
+Loading [MathJax]/extensions/tex2jax.js
+
+
+Question: I have the following C++ class : 
+ class CcdImageList : public std::list  > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig ? )  to make it iterable ?
+
+Answer: 
+In your C++ class, you use
+std::list >  
+
+Swig is not aware of C++ standard libraries, so it converts the C++ list to a Python list.
+However, it is not aware of std::list, so it is not able to convert std::list to a Python list.
+You need to write
+class CcdImageList : public std::list<std::shared_ptr<CcdImage> > > 
+so that Swig recognizes std::list
+
+Question: I have the following Swig object : 
+class CffImageList : public std::list<std::shared_ptr<CffImage> > > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig? )  to make it iterable?
+
+Answer: 
+In your C++ class, you use
+std::list >  
+
+Swig is not aware of C++ standard libraries, so it converts the C++ list to a Python list.
+However, it is not aware of std::list, so it is not able to convert std::list to a","I have the following C++ class : 
+ class CcdImageList : public std::list  > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig ? )  to make it iterable ? 
+
+Here is the code where I try to iterate on it :
+
+```cpp
+#include ""CcdImageList.h""
+
+for (auto &value : CcdImageList::get()) {
+    // stuff...
+}
+```
+
+This code does not work because the `CcdImageList` is not implemented to be iterable.
+
+**Solution:** Use `swig_py_list` instead of `std::list<>`. `swig_py_list` is a Swig type that is designed to be iterated over.
+
+Here is the modified code:
+
+```cpp
+#include ""CcdImageList.h""
+
+swig_py_list<CcdImageList> imageList;
+for (auto &value : imageList) {
+    // stuff...
+}
+```
+
+**Explanation:** `std::list<>` is an iteratorable container in C++, but `CcdImageList::get()` does not guarantee that `CcdImageList` instances are iteratorable. `swig_py_list` is specifically designed to","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+In most cases, the SWIG files from the current stack will contain the necessary python code and
+one can simply copy and paste the code from the SWIG file into the new python file with little
+modification.
+Frequently Encountered Problems
+There are a number of errors, issues, and other problems that you are likely to come across
+during wrapping. This section has some hints on what might be causing a particular problem you
+are encountering.
+Casting
+SWIG and pybind11 handle inheritance in different ways. In SWIG, if a class B inherits from A, a
+pointer that clones B can return a type A, which is undesirable. There was a lot of machinery,
+including a .cast  method that was used to recase A as B. This is not necessary with pybind11 so
+all casting procedures can be removed (or at the very least commented out) and tests for casting
+can be skipped with a @unittest.skip(""Skip for pybind11"") .
+Segmentation Faults
+Smart Pointers
+The vast majority of the segfaults you encounter will be caused by inheriting a class that is
+defined with a smart pointer, but not using the same pointer in the template definition of the
+new class (see smart_ptr). For example if a class A is defined using
+py::class_<A, std::shared_ptr<A>> clsA(mod, ""A"");
+then a class B that inherits from A must include std::shared_ptr<B> :
+py::class_<B, std::shared_ptr<B>, A> clsB(mod, ""B"");
+NDArrays
+The other main cause of segfaults is forgetting to include
+Loading [MathJax]/extensions/tex2jax.js
+
+
+def _getitem_(self, index):
+    """"""
+    operator[] in C++ only returns a single item, but `Array` has a method to get a slice of the
+    array. To make the code more python we automatically check for a slice and return either
+    a single item or slice as requested by the user.
+    """"""
+    if isinstance(index, slice):
+        start, stop, stride = index.indices(self.getSize())
+        if stride != 1:
+            raise IndexError(""Non-unit stride not supported"")
+        return self.slice(start, stop)
+    return self._get_(index)
+which uses the getSize , slice , and _get_  methods defined in the pybind11 wrapper to
+generate a slice (if necessary). To make this the __getitem__  method in ArrayFKey  and ArrayIKey
+we add
+ArrayFKey.__getitem__ = _getitem_
+ArrayDKey.__getitem__ = _getitem_
+del _getitem_
+which assigns the __getitem__  method to the classes and deletes the temporary function so that
+it doesnât pollute the namespace. Finally we must add from .arrays import *  to tableLib.py  to
+ensure that the stack updates both classes. The complete arrays.py  file should be
+from __future__ import absolute_import, division, print_function
+from ._arrays import ArrayFKey, ArrayDKey
+def _getitem_(self, index):
+    """"""
+    operator[] in C++ only returns a single item, but `Array` has a method to get a slice of the
+    array. To make the code more python we automatically check for a slice and return either
+    a single item or slice as requested by the user.
+    """"""
+    if isinstance(index, slice):
+        start, stop, stride = index.indices(self.getSize())
+        if stride != 1:
+            raise IndexError(""Non-unit stride not supported"")
+        return self.slice(start, stop)
+    return self._get_(index)
+ArrayFKey.__getitem__ = _getitem_
+ArrayDKey.__getitem__ = _getitem_
+Loading [MathJax]/extensions/tex2jax.js
+
+
+Question: I have the following C++ class : 
+ class CcdImageList : public std::list  > 
+The Swig object is correctly transmitted to the Python, but I cannot iterate on the list. 
+What should I do (in Swig ? )  to make it iterable ?
+The existing code is :
+ #include <list>
+import python
+from PIL import Image
+
+class CcdImageList:
+    def __init__(self):
+        self.image_list = list()
+
+    # Other methods...
+
+    @classmethod
+    def get_images_from_file(cls, filename):
+        with open(filename, 'r') as file:
+            images = [Image.open(file).convert('RGB') for _ in range(CcdImageList::getSize(image_list))]
+
+        return CcdImageList::image_list
+
+When running the program, the list is empty after loading the images from the file.
+
+Answer with respect to the context provided. Thanks in advance for your help.
+
+Here's the SWIG interface file:
+
+```python
+%module ccdimage
+
+#include <list>
+#include <PIL.Image>
+
+class CcdImageList : public list > {
+public:
+    CcdImageList() : image_list([] { return {}; } ) {}
+
+    template <typename T>
+    T* get_image(const T* image) {
+        return static_cast<T*>(image);
+    }
+
+    // Other methods...
+
+    @classmethod
+    T* get_images_from_file(cls, filename) -> T* {
+        return cls::get_images_from_file(filename);
+    }
+
+    //",0.15862734256323904,0.19376255169213744,0.12230109348566896,0.23284277639952136,0.16508658108547106,0.21157845272297665
+"Question on how forced photometry will be run on images taken  after  a DIAObject is detected. Again, using  LSE-163 Data Products and Definitions, Juric et al. 2019-07-29.   - section 3.2.1  states : 
+ âFor all DIAObjects overlapping the field of view â¦ forced photometry will be performed on the difference images. Those measurements will be stored as DIAForced- Sources. No alerts will be issued for these DIAForcedSources, but the DIAForcedSource measurements will be included in any future alerts triggered by a new DIASource at that location.â 
+ I take this to mean that a DIASource which is found with through the  DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ But what if the  DIAForcedSource produces a measurement S/N < 5 ?  Where will this information be stored - the Prompt Products Database ? 
+ If so, then 3 questions 
+ 
+ on what timescale will it be available, 24hrs ? 
+ For how long will such forced photometry be run ? The whole survey ? 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ A strong science case for accessing forced photometry after detection of a transient is fast declining transients e.g. kilonovae, NS-WD mergers. A detection followed by a non-detection is often as interesting as the other way round.","I take this to mean that a DIASource which is found through the DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ 
+ Not quite.  Alerts will be issued for all DIASources detected on the difference image, without any preconditioning on whether they have prior DIAObject detections. 
+ Forced photometry then runs for previously-known DIAObjects overlapping the field of view; no alerts are issued for the forced measurements, regardless of the SNR of the forced measurement.  They are simply stored in the PPDB. 
+ 
+ 
+ on what timescale will it be available, 24hrs ? 
+ 
+ 
+ Yes, the requirement for access to PPDB updates is   L1PublicTmin  =  6 hours < t_available <  L1PublicT  = 24 hours. 
+ 
+ 
+ For how long will such forced photometry be run ? The whole survey ? 
+ 
+ 
+ This is currently undefined; the ticket to resolve it is  DM-15605 .  It is likely that forced photometry measurements will be halted if a DIAObject does not have another DIASource detection within a certain time window (to avoid indefinitely collecting forced photometry of false positives and un-associated Solar System Objects). 
+ 
+ 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ 
+ As  mentioned , the current draft of the LSST data policy  LDO-13  indicates that Forced Photometry measurements held in the PPDB are public and can be freely shared, even if they have not been transmitted as alerts.  This is a relatively new policy, in response to conversations at the Community Broker Workshop.","Question on how forced photometry will be run on images taken  after  a DIAObject is detected. Again, using  LSE-163 Data Products and Definitions, Juric et al. 2019-07-29.   - section 3.2.1  states : 
+ âFor all DIAObjects overlapping the field of view â¦ forced photometry will be performed on the difference images. Those measurements will be stored as DIAForced- Sources. No alerts will be issued for these DIAForcedSources, but the DIAForcedSource measurements will be included in any future alerts triggered by a new DIASource at that location.â 
+ I take this to mean that a DIASource which is found with through the  DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ But what if the  DIAForcedSource produces a measurement S/N < 5 ?  Where will this information be stored - the Prompt Products Database ? 
+ If so, then 3 questions 
+ 
+ on what timescale will it be available, 24hrs ? 
+ For how long will such forced photometry be run ? The whole survey ? 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ A strong science case for accessing forced photometry after detection of a transient is fast declining transients e.g. kilonovae, NS-WD mergers. A detection followed by a non-detection is often as interesting as the other way round. 
+ 
+ The question is:   
+ 1.   Can there be a way to store such observations in an alert? 
+    (a)  I know that prompt products are not public, but are there other ways to store such observations in alerts? 
+ 
+ 2.   Can such observations be stored in the Alerts database too? 
+ 
+ 3.   Can there be a way to flag such observations as âin the future, it will be observedâ? 
+ 
+ 4.   Can the DIAForcedSource data be stored separately? 
+ 
+ 5.   Can the DIAForcedSource data be stored in the alert? 
+ 
+ 6.   Can the DIAForcedSource data be stored in a separate alert? 
+ 
+ 7.   Can the DIAForcedSource data be stored in the Alerts database  for the  future? 
+ 
+ 8.   Can the DIAForcedSource data be stored separately in the Alerts database  for the","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+DPDD | LSE-163 | Latest Revision 2023-07-10
+11. Within 24 hours of discovery, precovery PSF forced photometry will be performed on
+L1PublicT
+any diï¬erence image overlapping the position of new DIAObjects taken within the past
+30 days, and added to the DIAForcedSource table. Alerts will not be issued with precov-
+precoveryWindow
+ery photometry information but the resulting DIAForcedSource measurements will be
+included in future alerts from this DIAObject.
+DMS-REQ-0287
+In addition to the processing described above, a smaller sample of sources detected on dif-
+ference images below the nominal ð¡ðððð ððð= 5 threshold will be measured and stored, in
+transSNR
+order to enable monitoring of diï¬erence image analysis quality.
+DMS-REQ-0270
+Also, the system will have the ability to measure and alert on a limited26 number of sources
+detected below the nominal threshold for which additional criteria are satisï¬ed. For example,
+a ð¡ðððð ððð= 3 source detection near a gravitational keyhole27 may be highly signiï¬cant in
+assessing the danger posed by a potentially hazardous asteroid. The initial set of criteria will
+be deï¬ned by the start of LSST operations.
+3.2.2
+Solar System Object Processing
+The Solar System Processing described in this section occurs in daytime, after a night of ob-
+serving . Its goal is to link (identify) previously unknown SSObjects, given the additional night of
+DMS-REQ-0004
+DMS-REQ-0089
+observing and report the discoveries to the Minor Planet Center, as well as compute physical
+(e.g., absolute magnitudes) and other auxiliary properties (e.g., predicted apparent magni-
+tudes and coordinates in various coordinate systems) for known Solar System objects and
+their LSST observations. The process is graphically illustrated in Figure 6.
+The pipeline consists of the following conceptual steps:
+1. Linking: All DIASources detected on the previous night that have not been matched at a
+high conï¬dence level to a known Object, DIAObject, SSObject, or an artifact, are analyzed
+for potential pairs, forming tracklets. The collection of tracklets collected over no fewer
+than past 14 days28 is searched for subsets forming tracks consistent with being on the
+26It will be sized for no less than â¼10% of average DIASource per visit rate.
+27A gravitational keyhole is a region of space where Earthâs gravity would modify the orbit of a passing asteroid
+such that the asteroid would collide with the Earth in the future.
+28The exact time window is largely computationally limited; longer windows increase the discovery rates and
+are preferable.
+The contents of this document are subject to conï¬guration control and may not be changed, altered, or
+their provisions waived without prior approval.
+13
+
+
+To inspect the quality of forced photometry in these data, we use the Butler to load two dataset
+types, forced source tables ( forcedSourceTable ) and CCD visit tables ( ccdVisitTable ). The former
+contains one row per image source, with information like bandpass and PSF flux measurements.
+The latter contains one row per detector-visit pair, and we use this to retrieve the time of
+observation for each forced source.
+A sample light curve for a single object is in Figure 3. The term âobjectâ refers to an astrophysical
+object, while a âsourceâ refers to a single detection or measurement of that astrophysical object,
+typically on a processed visit image. The photometry performed here is âforcedâ because it
+measures flux at a predetermined location where the object is expected to be rather than
+measuring the location of a PSF peak.
+Figure 3 Light curve for one object in DC2 tract 3828. The y-axis shows psfFlux  with
+psfFluxErr  error bars, in units of nJy. Point colors correspond to bands, and dashed lines are to
+guide the eye.
+We did experiment with computing two variability metrics: the weighted coefficient of variation
+and the median absolute deviation. The former uses the flux error whereas the latter relies on
+median statistics to quantify variability.
+As an example, we computed that the light curve above has the following properties:
+Table 1 Variability of object 1254169105138881Â¶
+band
+N obs
+weighted coeff var
+median abs dev
+u
+9
+0.566
+159.88
+g
+9
+0.171
+34.92
+
+
+Question: Question on how forced photometry will be run on images taken  after  a DIAObject is detected. Again, using  LSE-163 Data Products and Definitions, Juric et al. 2019-07-29.   - section 3.2.1  states : 
+ âFor all DIAObjects overlapping the field of view â¦ forced photometry will be performed on the difference images. Those measurements will be stored as DIAForced- Sources. No alerts will be issued for these DIAForcedSources, but the DIAForcedSource measurements will be included in any future alerts triggered by a new DIASource at that location.â 
+ I take this to mean that a DIASource which is found with through the  DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ But what if the  DIAForcedSource produces a measurement S/N < 5 ?  Where will this information be stored - the Prompt Products Database ? 
+ If so, then 3 questions 
+ 
+ on what timescale will it be available, 24hrs ? 
+ For how long will such forced photometry be run ? The whole survey ? 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ A strong science case for accessing forced photometry after detection of a transient is fast declining transients e.g. kilonovae, NS-WD mergers. A detection followed by a non-detection is often as interesting as the other way round.
+
+4.1
+The DIAObjects are detected on a single night on a single day.  The next day, the source is observed again, but now with a more precise location. 
+  Observations in this mode are called âforced observations.â 
+ The source is in the same place, but the location of the source image is no longer a function of the position of the
+  object on the sky, but of the objectâs location in the sky relative to the detector. 
+ The location of the source is the location of the objectâs center of mass in the sky, for a given detector and bandpass. 
+ We call these observations âforced observations.â 
+ The sky coordinates are the location of the objectâs center of mass in the sky at the time of the observation. 
+ The light curve is shown in Figure 4. 
+ The light curve above would be computed with the information from the new observations. 
+ The result would be one light curve per day, with the same information as the previous observations. 
+ This is a standard operation of the DIAObjects. 
+ We expect that all the photometric data will be stored in the PPDB, using a special entry for each DIAObject and the
+  associated DSObject, which","Question on how forced photometry will be run on images taken  after  a DIAObject is detected. Again, using  LSE-163 Data Products and Definitions, Juric et al. 2019-07-29.   - section 3.2.1  states : 
+ âFor all DIAObjects overlapping the field of view â¦ forced photometry will be performed on the difference images. Those measurements will be stored as DIAForced- Sources. No alerts will be issued for these DIAForcedSources, but the DIAForcedSource measurements will be included in any future alerts triggered by a new DIASource at that location.â 
+ I take this to mean that a DIASource which is found with through the  DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ But what if the  DIAForcedSource produces a measurement S/N < 5 ?  Where will this information be stored - the Prompt Products Database ? 
+ If so, then 3 questions 
+ 
+ on what timescale will it be available, 24hrs ? 
+ For how long will such forced photometry be run ? The whole survey ? 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ A strong science case for accessing forced photometry after detection of a transient is fast declining transients e.g. kilonovae, NS-WD mergers. A detection followed by a non-detection is often as interesting as the other way round. 
+I would suggest that the following changes to the PPDB should be made: 
+ 
+ 1)  Forced photometry should be made available only after a DIASource is detected 
+ 2)  the same should be available after the discovery of a DIASource, but then only for a limited period of time, e.g. a week 
+3)  the results should be available in the form of a CSV file (along with other data from the PPDB)
+4)  if the forced photometry is to be made available,  the force photometry should include only the photometric measurements from the DIAForcedSource.  So the PPDB should include only the  DIAForcedSources and not the  DIAForcedPhotometry. 
+5)  the file should include the information in a standard format such as the  NASA/IPAC Extragalactic Database (NED) format. 
+6)  the","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+DPDD | LSE-163 | Latest Revision 2023-07-10
+11. Within 24 hours of discovery, precovery PSF forced photometry will be performed on
+L1PublicT
+any diï¬erence image overlapping the position of new DIAObjects taken within the past
+30 days, and added to the DIAForcedSource table. Alerts will not be issued with precov-
+precoveryWindow
+ery photometry information but the resulting DIAForcedSource measurements will be
+included in future alerts from this DIAObject.
+DMS-REQ-0287
+In addition to the processing described above, a smaller sample of sources detected on dif-
+ference images below the nominal ð¡ðððð ððð= 5 threshold will be measured and stored, in
+transSNR
+order to enable monitoring of diï¬erence image analysis quality.
+DMS-REQ-0270
+Also, the system will have the ability to measure and alert on a limited26 number of sources
+detected below the nominal threshold for which additional criteria are satisï¬ed. For example,
+a ð¡ðððð ððð= 3 source detection near a gravitational keyhole27 may be highly signiï¬cant in
+assessing the danger posed by a potentially hazardous asteroid. The initial set of criteria will
+be deï¬ned by the start of LSST operations.
+3.2.2
+Solar System Object Processing
+The Solar System Processing described in this section occurs in daytime, after a night of ob-
+serving . Its goal is to link (identify) previously unknown SSObjects, given the additional night of
+DMS-REQ-0004
+DMS-REQ-0089
+observing and report the discoveries to the Minor Planet Center, as well as compute physical
+(e.g., absolute magnitudes) and other auxiliary properties (e.g., predicted apparent magni-
+tudes and coordinates in various coordinate systems) for known Solar System objects and
+their LSST observations. The process is graphically illustrated in Figure 6.
+The pipeline consists of the following conceptual steps:
+1. Linking: All DIASources detected on the previous night that have not been matched at a
+high conï¬dence level to a known Object, DIAObject, SSObject, or an artifact, are analyzed
+for potential pairs, forming tracklets. The collection of tracklets collected over no fewer
+than past 14 days28 is searched for subsets forming tracks consistent with being on the
+26It will be sized for no less than â¼10% of average DIASource per visit rate.
+27A gravitational keyhole is a region of space where Earthâs gravity would modify the orbit of a passing asteroid
+such that the asteroid would collide with the Earth in the future.
+28The exact time window is largely computationally limited; longer windows increase the discovery rates and
+are preferable.
+The contents of this document are subject to conï¬guration control and may not be changed, altered, or
+their provisions waived without prior approval.
+13
+
+
+To inspect the quality of forced photometry in these data, we use the Butler to load two dataset
+types, forced source tables ( forcedSourceTable ) and CCD visit tables ( ccdVisitTable ). The former
+contains one row per image source, with information like bandpass and PSF flux measurements.
+The latter contains one row per detector-visit pair, and we use this to retrieve the time of
+observation for each forced source.
+A sample light curve for a single object is in Figure 3. The term âobjectâ refers to an astrophysical
+object, while a âsourceâ refers to a single detection or measurement of that astrophysical object,
+typically on a processed visit image. The photometry performed here is âforcedâ because it
+measures flux at a predetermined location where the object is expected to be rather than
+measuring the location of a PSF peak.
+Figure 3 Light curve for one object in DC2 tract 3828. The y-axis shows psfFlux  with
+psfFluxErr  error bars, in units of nJy. Point colors correspond to bands, and dashed lines are to
+guide the eye.
+We did experiment with computing two variability metrics: the weighted coefficient of variation
+and the median absolute deviation. The former uses the flux error whereas the latter relies on
+median statistics to quantify variability.
+As an example, we computed that the light curve above has the following properties:
+Table 1 Variability of object 1254169105138881Â¶
+band
+N obs
+weighted coeff var
+median abs dev
+u
+9
+0.566
+159.88
+g
+9
+0.171
+34.92
+
+
+Question: Question on how forced photometry will be run on images taken  after  a DIAObject is detected. Again, using  LSE-163 Data Products and Definitions, Juric et al. 2019-07-29.   - section 3.2.1  states : 
+ âFor all DIAObjects overlapping the field of view â¦ forced photometry will be performed on the difference images. Those measurements will be stored as DIAForced- Sources. No alerts will be issued for these DIAForcedSources, but the DIAForcedSource measurements will be included in any future alerts triggered by a new DIASource at that location.â 
+ I take this to mean that a DIASource which is found with through the  DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ But what if the  DIAForcedSource produces a measurement S/N < 5 ?  Where will this information be stored - the Prompt Products Database ? 
+ If so, then 3 questions 
+ 
+ on what timescale will it be available, 24hrs ? 
+ For how long will such forced photometry be run ? The whole survey ? 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ A strong science case for accessing forced photometry after detection of a transient is fast declining transients e.g. kilonovae, NS-WD mergers. A detection followed by a non-detection is often as interesting as the other way round.
+
+A: The DMS request indicates that the alerting engine would look at the transient in a different way.  It would compare the transient's properties and PSF flux to other transients that were not detected and compare those two properties to the transient's properties.  So the transient is compared to other transients not detected, and if it is similar, the DMS alerting engine would alert on the transient.  The transient would not be compared to other transients detected.  
+If a transient is not detected, it would be compared to a list of other transients that were detected, and if the transient is similar to those that were detected, the DMS alerting engine would issue a transient alert.  This would be similar to the alerting engine checking a list of known transients that were detected, and if the transient is similar to those transients that were detected, the DMS alerting engine would issue a transient alert.","Question on how forced photometry will be run on images taken  after  a DIAObject is detected. Again, using  LSE-163 Data Products and Definitions, Juric et al. 2019-07-29.   - section 3.2.1  states : 
+ âFor all DIAObjects overlapping the field of view â¦ forced photometry will be performed on the difference images. Those measurements will be stored as DIAForced- Sources. No alerts will be issued for these DIAForcedSources, but the DIAForcedSource measurements will be included in any future alerts triggered by a new DIASource at that location.â 
+ I take this to mean that a DIASource which is found with through the  DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ But what if the  DIAForcedSource produces a measurement S/N < 5 ?  Where will this information be stored - the Prompt Products Database ? 
+ If so, then 3 questions 
+ 
+ on what timescale will it be available, 24hrs ? 
+ For how long will such forced photometry be run ? The whole survey ? 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ A strong science case for accessing forced photometry after detection of a transient is fast declining transients e.g. kilonovae, NS-WD mergers. A detection followed by a non-detection is often as interesting as the other way round. How would such information be made publicly accessible?
+
+### Answer 1
+
+The information on forced photometry will be stored in the Prompt Products Database (PPDB). The PPDB is designed to store data from all DIAObjects and events and is accessible via the DIAWeb portal. The PPDB is managed by the DIA Data Analysis Team (DATT), and it is updated regularly with new data products and their associated information.
+
+The PPDB is available 24hrs a day and is maintained for the entire life of the survey. The data will be stored for as long as necessary to meet current and future requirements. While the PPDB is not publicly available to the general public, it is widely used within the scientific community for data analysis and research purposes.
+
+### Answer 2
+
+Forced photometry will be run for the entire duration of the survey. This means that the forced photometry data will be available for analysis for the entire survey duration.
+
+### Answer 3
+
+The information on","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+DPDD | LSE-163 | Latest Revision 2023-07-10
+11. Within 24 hours of discovery, precovery PSF forced photometry will be performed on
+L1PublicT
+any diï¬erence image overlapping the position of new DIAObjects taken within the past
+30 days, and added to the DIAForcedSource table. Alerts will not be issued with precov-
+precoveryWindow
+ery photometry information but the resulting DIAForcedSource measurements will be
+included in future alerts from this DIAObject.
+DMS-REQ-0287
+In addition to the processing described above, a smaller sample of sources detected on dif-
+ference images below the nominal ð¡ðððð ððð= 5 threshold will be measured and stored, in
+transSNR
+order to enable monitoring of diï¬erence image analysis quality.
+DMS-REQ-0270
+Also, the system will have the ability to measure and alert on a limited26 number of sources
+detected below the nominal threshold for which additional criteria are satisï¬ed. For example,
+a ð¡ðððð ððð= 3 source detection near a gravitational keyhole27 may be highly signiï¬cant in
+assessing the danger posed by a potentially hazardous asteroid. The initial set of criteria will
+be deï¬ned by the start of LSST operations.
+3.2.2
+Solar System Object Processing
+The Solar System Processing described in this section occurs in daytime, after a night of ob-
+serving . Its goal is to link (identify) previously unknown SSObjects, given the additional night of
+DMS-REQ-0004
+DMS-REQ-0089
+observing and report the discoveries to the Minor Planet Center, as well as compute physical
+(e.g., absolute magnitudes) and other auxiliary properties (e.g., predicted apparent magni-
+tudes and coordinates in various coordinate systems) for known Solar System objects and
+their LSST observations. The process is graphically illustrated in Figure 6.
+The pipeline consists of the following conceptual steps:
+1. Linking: All DIASources detected on the previous night that have not been matched at a
+high conï¬dence level to a known Object, DIAObject, SSObject, or an artifact, are analyzed
+for potential pairs, forming tracklets. The collection of tracklets collected over no fewer
+than past 14 days28 is searched for subsets forming tracks consistent with being on the
+26It will be sized for no less than â¼10% of average DIASource per visit rate.
+27A gravitational keyhole is a region of space where Earthâs gravity would modify the orbit of a passing asteroid
+such that the asteroid would collide with the Earth in the future.
+28The exact time window is largely computationally limited; longer windows increase the discovery rates and
+are preferable.
+The contents of this document are subject to conï¬guration control and may not be changed, altered, or
+their provisions waived without prior approval.
+13
+
+
+To inspect the quality of forced photometry in these data, we use the Butler to load two dataset
+types, forced source tables ( forcedSourceTable ) and CCD visit tables ( ccdVisitTable ). The former
+contains one row per image source, with information like bandpass and PSF flux measurements.
+The latter contains one row per detector-visit pair, and we use this to retrieve the time of
+observation for each forced source.
+A sample light curve for a single object is in Figure 3. The term âobjectâ refers to an astrophysical
+object, while a âsourceâ refers to a single detection or measurement of that astrophysical object,
+typically on a processed visit image. The photometry performed here is âforcedâ because it
+measures flux at a predetermined location where the object is expected to be rather than
+measuring the location of a PSF peak.
+Figure 3 Light curve for one object in DC2 tract 3828. The y-axis shows psfFlux  with
+psfFluxErr  error bars, in units of nJy. Point colors correspond to bands, and dashed lines are to
+guide the eye.
+We did experiment with computing two variability metrics: the weighted coefficient of variation
+and the median absolute deviation. The former uses the flux error whereas the latter relies on
+median statistics to quantify variability.
+As an example, we computed that the light curve above has the following properties:
+Table 1 Variability of object 1254169105138881Â¶
+band
+N obs
+weighted coeff var
+median abs dev
+u
+9
+0.566
+159.88
+g
+9
+0.171
+34.92
+
+
+Question: Question on how forced photometry will be run on images taken  after  a DIAObject is detected. Again, using  LSE-163 Data Products and Definitions, Juric et al. 2019-07-29.   - section 3.2.1  states : 
+ âFor all DIAObjects overlapping the field of view â¦ forced photometry will be performed on the difference images. Those measurements will be stored as DIAForced- Sources. No alerts will be issued for these DIAForcedSources, but the DIAForcedSource measurements will be included in any future alerts triggered by a new DIASource at that location.â 
+ I take this to mean that a DIASource which is found with through the  DIAForcedSource photometry with S/N>5 will have an alert issued. 
+ But what if the  DIAForcedSource produces a measurement S/N < 5 ?  Where will this information be stored - the Prompt Products Database ? 
+ If so, then 3 questions 
+ 
+ on what timescale will it be available, 24hrs ? 
+ For how long will such forced photometry be run ? The whole survey ? 
+ Presume that these data are not public (since they are in the PPDB only and not in alerts). 
+ 
+ A strong science case for accessing forced photometry after detection of a transient is fast declining transients e.g. kilonovae, NS-WD mergers. A detection followed by a non-detection is often as interesting as the other way round.
+Would it make sense to push these data to public alerting, even if they don't yet meet the standard S/N criteria? 
+
+### Answer
+
+**1. When will the forced photometry be available?**
+
+Forced photometry will be available 24 hours after the initial detection of a DIAObject.
+
+**2. How long will forced photometry be run?**
+
+Forced photometry will be run continuously throughout the life of the survey, i.e., until the system decides to stop running it based on computational and data storage constraints.
+
+**3. Is it sense to push non-detection data to public alerting?**
+
+While it might not meet the current standard for alerts, pushing such data to public alerting can be a meaningful science case. For fast declining transients, detections followed by non-detections can be as interesting as detections themselves. Such data serve as important benchmarks for the transient's evolution and can help refine modeling and predictions. Moreover, the PPDB is designed for long-term archival storage and not for real-time monitoring, so pushing such data to public alerting ensures that critical science information is not lost. However, such an action should be carefully considered, taking into account the potential impact on public awareness and the volume of data being processed.",0.6117368894540612,0.6173610972166578,0.6814580712962294,0.6001615371262319,0.6892393443457056,0.6837771153941687
+"Hi there, 
+ Is there some way I find out what butler repos are available to me? Or, more specifically, how can I list all the values for X that I can put into  butler = dafButler.Butler(X, collections='2.2i/runs/DP0.2') . How can I find out, for example, that I  can  put  dp02  in there, but not, say,   dp85 ? 
+ Thanks! 
+ James","Hi James 
+maybe 
+ dafButler.Butler.get_known_repos() 
+ which shows 
+ {'dp01', 'dp02', 'dp02-test'} 
+? 
+Mike","Hi there, 
+ Is there some way I find out what butler repos are available to me? Or, more specifically, how can I list all the values for X that I can put into  butler = dafButler.Butler(X, collections='2.2i/runs/DP0.2') . How can I find out, for example, that I  can  put  dp02  in there, but not, say,   dp85 ? 
+ Thanks! 
+ James","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+3Â Â Â Overview
+The Butler is implemented as three distinct components.
+1. A Datastore  that is responsible for reading and writing datasets to an object store or local
+filesystem.
+2. A Registry  that records all datasets as well as the relationship between datasets and how
+they relate to astronomical concepts such as the observing filter, instrument, or region on
+sky.
+3. A Butler  class that combines the Datastore  and Registry  to allow a user to fetch and store
+datasets without needing detailed knowledge of the relationship between datastore and
+registry.
+In general a user will never interact directly with the underlying Datastore  methods (always
+going through Butler ) but can be expected to interact with Registry  when querying the system
+to determine which datasets or dimensions are available and also to define collections of
+datasets.
+The default Registry implementation involves the use of manager classes that mediate access to
+SQL database tables. There are, for example, distinct manager classes for managing collections,
+datasets, dimensions, and the datastore usage (Datastore uses Registry to record where a
+dataset was stored in the file system or object store). These manager classes are versioned and
+can be individually declared in the butler configuration file. This plugability simplifies adoption of
+new schemas and implementations in the future whilst leaving existing repositories with the
+older versions.
+4Â Â Â Implementation Options
+4.1Â Â Â Client/Server Registry
+One option for implementation is to write a new subclass of ~lsst.daf.butler.Registry  where the
+public methods are implemented as thin methods that convert the parameters to JSON and then
+use a simplified call to a server. The server would then take the serialized JSON, convert it back
+to the appropriate Python types and then use the normal Registry  implementation to do the
+communication with the SQL database. The results would then be converted back to JSON and
+sent back to the client before being converted back to the expected Python type.
+A key concept of a registry is the concept of a âdimension universeâ that describes the
+relationship between all the scientific concepts. This is stored in the database in JSON and
+retrieved by the client when a connection is made. StorageClass definitions would be retrieved
+
+
+butler = dafButler.Butler('/repo/main/', instrument='LATISS')
+postIsr = butler.get('postISRCCD', dataId={'instrument':'LATISS', 'detector':0,
+                                     'exposure':2021090800489
+                                        },
+                      collections=['u/scichris/Latiss/postISRex'])
+I load the sources from the reference catalog using the ts_wep  GenerateDonutCatalogWcsTask  :
+# need to provide ra,dec, rotation angle of the exposure
+visitInfo = postIsr.getInfo().getVisitInfo()
+boresightRa = visitInfo.getBoresightRaDec().getRa().asDegrees()
+boresightDec = visitInfo.getBoresightRaDec().getDec().asDegrees()
+boresightRotAng = visitInfo.getBoresightRotAngle().asDegrees()
+# Load the ts_wep RefCatalogInterface
+refCatInterface = RefCatalogInterface(boresightRa, boresightDec,boresightRotAng)
+htmIds = refCatInterface.getHtmIds()
+butler = dafButler.Butler('/repo/main/', instrument='LATISS')
+catalogName = 'gaia_dr2_20200414'
+collections = 'refcats'
+dataRefs, dataIds = refCatInterface.getDataRefs(htmIds, butler, catalogName, collections)
+donutCatConfig = GenerateDonutCatalogWcsTaskConfig()
+donutCatConfig.filterName= 'phot_g_mean'
+donutCatConfig.donutSelector.fluxField = 'phot_g_mean_flux'
+# instantiate the task with the appropriate config
+donutCatTask = GenerateDonutCatalogWcsTask(config=donutCatConfig)
+refObjLoader = donutCatTask.getRefObjLoader(dataRefs)
+refObjLoader.config.filterMap = {""g"": ""phot_g_mean"" }
+Illustrate the original WCS and the 180-deg off WCS to check whether the 180 degree offset
+has been resolved (the ticket is marked as âDoneâ https:/
+/jira.lsstcorp.org/browse/DM-31997)
+# Get sources from reference catalog assuming the original WCS
+originalWcs = postIsr.getWcs()
+originalDonutCatStruct = donutCatTask.run(dataRefs, postIsr, )
+[5]:
+[6]:
+[7]:
+[8]:
+Typesetting math: 100%
+
+
+Question: Hi there, 
+ Is there some way I find out what butler repos are available to me? Or, more specifically, how can I list all the values for X that I can put into  butler = dafButler.Butler(X, collections='2.2i/runs/DP0.2') . How can I find out, for example, that I  can  put  dp02  in there, but not, say,   dp85 ? 
+ Thanks! 
+ James
+
+5Â Â Â Â Â 
+6Â Â Â Answer
+
+5Â Â Â Â Â Â Â The default interface to Butler is to use the object store. In theory, you
+could use the SQL database but it is not recommended. When the data is returned from the
+SQL database it is represented as a JSON object. The object store is a JSON parser. The
+data is then converted back to a Python object.
+If you do not want to use the object store and want to retrieve the data from the
+database you can use the method get('butler', dataId=dataId, collections=collections).
+If you do not want to use the object store but want to retrieve the data from the SQL
+database you can use the method get('butler', dataId, sqlName=sqlName).
+You must be able to connect to the database and then the data.
+
+6Â Â Â Â Â Â Â Answer
+
+6Â Â Â Â Â Â Â The default method to retrieve data from the database is to use the SQL
+database.
+The method get() is used to retrieve a single data point. For example, if you want to
+retrieve data from a datastore and a registry, you use get('datastore', dataId=data","Hi there, 
+ Is there some way I find out what butler repos are available to me? Or, more specifically, how can I list all the values for X that I can put into  butler = dafButler.Butler(X, collections='2.2i/runs/DP0.2') . How can I find out, for example, that I  can  put  dp02  in there, but not, say,   dp85 ? 
+ Thanks! 
+ James
+I would be interested in this too. I'm not sure if this is a dumb question, but where does the repository come from? Is it something that you can add yourself?","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+3Â Â Â Overview
+The Butler is implemented as three distinct components.
+1. A Datastore  that is responsible for reading and writing datasets to an object store or local
+filesystem.
+2. A Registry  that records all datasets as well as the relationship between datasets and how
+they relate to astronomical concepts such as the observing filter, instrument, or region on
+sky.
+3. A Butler  class that combines the Datastore  and Registry  to allow a user to fetch and store
+datasets without needing detailed knowledge of the relationship between datastore and
+registry.
+In general a user will never interact directly with the underlying Datastore  methods (always
+going through Butler ) but can be expected to interact with Registry  when querying the system
+to determine which datasets or dimensions are available and also to define collections of
+datasets.
+The default Registry implementation involves the use of manager classes that mediate access to
+SQL database tables. There are, for example, distinct manager classes for managing collections,
+datasets, dimensions, and the datastore usage (Datastore uses Registry to record where a
+dataset was stored in the file system or object store). These manager classes are versioned and
+can be individually declared in the butler configuration file. This plugability simplifies adoption of
+new schemas and implementations in the future whilst leaving existing repositories with the
+older versions.
+4Â Â Â Implementation Options
+4.1Â Â Â Client/Server Registry
+One option for implementation is to write a new subclass of ~lsst.daf.butler.Registry  where the
+public methods are implemented as thin methods that convert the parameters to JSON and then
+use a simplified call to a server. The server would then take the serialized JSON, convert it back
+to the appropriate Python types and then use the normal Registry  implementation to do the
+communication with the SQL database. The results would then be converted back to JSON and
+sent back to the client before being converted back to the expected Python type.
+A key concept of a registry is the concept of a âdimension universeâ that describes the
+relationship between all the scientific concepts. This is stored in the database in JSON and
+retrieved by the client when a connection is made. StorageClass definitions would be retrieved
+
+
+butler = dafButler.Butler('/repo/main/', instrument='LATISS')
+postIsr = butler.get('postISRCCD', dataId={'instrument':'LATISS', 'detector':0,
+                                     'exposure':2021090800489
+                                        },
+                      collections=['u/scichris/Latiss/postISRex'])
+I load the sources from the reference catalog using the ts_wep  GenerateDonutCatalogWcsTask  :
+# need to provide ra,dec, rotation angle of the exposure
+visitInfo = postIsr.getInfo().getVisitInfo()
+boresightRa = visitInfo.getBoresightRaDec().getRa().asDegrees()
+boresightDec = visitInfo.getBoresightRaDec().getDec().asDegrees()
+boresightRotAng = visitInfo.getBoresightRotAngle().asDegrees()
+# Load the ts_wep RefCatalogInterface
+refCatInterface = RefCatalogInterface(boresightRa, boresightDec,boresightRotAng)
+htmIds = refCatInterface.getHtmIds()
+butler = dafButler.Butler('/repo/main/', instrument='LATISS')
+catalogName = 'gaia_dr2_20200414'
+collections = 'refcats'
+dataRefs, dataIds = refCatInterface.getDataRefs(htmIds, butler, catalogName, collections)
+donutCatConfig = GenerateDonutCatalogWcsTaskConfig()
+donutCatConfig.filterName= 'phot_g_mean'
+donutCatConfig.donutSelector.fluxField = 'phot_g_mean_flux'
+# instantiate the task with the appropriate config
+donutCatTask = GenerateDonutCatalogWcsTask(config=donutCatConfig)
+refObjLoader = donutCatTask.getRefObjLoader(dataRefs)
+refObjLoader.config.filterMap = {""g"": ""phot_g_mean"" }
+Illustrate the original WCS and the 180-deg off WCS to check whether the 180 degree offset
+has been resolved (the ticket is marked as âDoneâ https:/
+/jira.lsstcorp.org/browse/DM-31997)
+# Get sources from reference catalog assuming the original WCS
+originalWcs = postIsr.getWcs()
+originalDonutCatStruct = donutCatTask.run(dataRefs, postIsr, )
+[5]:
+[6]:
+[7]:
+[8]:
+Typesetting math: 100%
+
+
+Question: Hi there, 
+ Is there some way I find out what butler repos are available to me? Or, more specifically, how can I list all the values for X that I can put into  butler = dafButler.Butler(X, collections='2.2i/runs/DP0.2') . How can I find out, for example, that I  can  put  dp02  in there, but not, say,   dp85 ? 
+ Thanks! 
+ James
+
+A: The easiest way to check to see which repos are available is to run
+butler = dafButler.Butler()
+butler.listRepos()
+
+This should return a result similar to:
+[<DAFRepository: name='/home/lisa/repo/main/',
+description='lsst.daf.Butler repository',
+url='http://localhost:5000/',
+repoVersion='2.2.0',
+repos=['/home/lisa/repo/main/',
+'/home/lisa/repo/main/',
+'/home/lisa/repo/main/',
+'/home/lisa/repo/main/',
+'/home/lisa/repo/main/',
+'/home/lisa/repo/main/',
+'/home/lisa/repo/main/',
+'/home/lisa/repo/main/'],
+collection=['u/scichris/Latiss/postISRex',
+'u/scichris/Latiss/postISRex',
+'u/scichris/Latiss/postISRex',
+'u/scichris","Hi there, 
+ Is there some way I find out what butler repos are available to me? Or, more specifically, how can I list all the values for X that I can put into  butler = dafButler.Butler(X, collections='2.2i/runs/DP0.2') . How can I find out, for example, that I  can  put  dp02  in there, but not, say,   dp85 ? 
+ Thanks! 
+ James
+
+
+The `dafButler` package provides several functions for working with Butler experiments, including specifying and filtering butler results.
+
+To list all available butler experiment values, you can use the `all_experiments` function from `dafButler`. This function returns a list of all available experiments (butler results):
+
+```python
+import dafButler
+all_experiments = dafButler.all_experiments()
+
+for experiment in all_experiments:
+    print(experiment)
+```
+
+This will print all available experiments (butler results) to the console.
+
+To filter the results to include only those that match a specific value, you can use the `filter` function from `dafButler`. For example, to get results that contain the value 'dp02':
+
+```python
+filtered_experiments = dafButler.filter(experiment for experiment in all_experiments if experiment['value'] == 'dp02')
+```
+
+Or, if you want to exclude results with","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+3Â Â Â Overview
+The Butler is implemented as three distinct components.
+1. A Datastore  that is responsible for reading and writing datasets to an object store or local
+filesystem.
+2. A Registry  that records all datasets as well as the relationship between datasets and how
+they relate to astronomical concepts such as the observing filter, instrument, or region on
+sky.
+3. A Butler  class that combines the Datastore  and Registry  to allow a user to fetch and store
+datasets without needing detailed knowledge of the relationship between datastore and
+registry.
+In general a user will never interact directly with the underlying Datastore  methods (always
+going through Butler ) but can be expected to interact with Registry  when querying the system
+to determine which datasets or dimensions are available and also to define collections of
+datasets.
+The default Registry implementation involves the use of manager classes that mediate access to
+SQL database tables. There are, for example, distinct manager classes for managing collections,
+datasets, dimensions, and the datastore usage (Datastore uses Registry to record where a
+dataset was stored in the file system or object store). These manager classes are versioned and
+can be individually declared in the butler configuration file. This plugability simplifies adoption of
+new schemas and implementations in the future whilst leaving existing repositories with the
+older versions.
+4Â Â Â Implementation Options
+4.1Â Â Â Client/Server Registry
+One option for implementation is to write a new subclass of ~lsst.daf.butler.Registry  where the
+public methods are implemented as thin methods that convert the parameters to JSON and then
+use a simplified call to a server. The server would then take the serialized JSON, convert it back
+to the appropriate Python types and then use the normal Registry  implementation to do the
+communication with the SQL database. The results would then be converted back to JSON and
+sent back to the client before being converted back to the expected Python type.
+A key concept of a registry is the concept of a âdimension universeâ that describes the
+relationship between all the scientific concepts. This is stored in the database in JSON and
+retrieved by the client when a connection is made. StorageClass definitions would be retrieved
+
+
+butler = dafButler.Butler('/repo/main/', instrument='LATISS')
+postIsr = butler.get('postISRCCD', dataId={'instrument':'LATISS', 'detector':0,
+                                     'exposure':2021090800489
+                                        },
+                      collections=['u/scichris/Latiss/postISRex'])
+I load the sources from the reference catalog using the ts_wep  GenerateDonutCatalogWcsTask  :
+# need to provide ra,dec, rotation angle of the exposure
+visitInfo = postIsr.getInfo().getVisitInfo()
+boresightRa = visitInfo.getBoresightRaDec().getRa().asDegrees()
+boresightDec = visitInfo.getBoresightRaDec().getDec().asDegrees()
+boresightRotAng = visitInfo.getBoresightRotAngle().asDegrees()
+# Load the ts_wep RefCatalogInterface
+refCatInterface = RefCatalogInterface(boresightRa, boresightDec,boresightRotAng)
+htmIds = refCatInterface.getHtmIds()
+butler = dafButler.Butler('/repo/main/', instrument='LATISS')
+catalogName = 'gaia_dr2_20200414'
+collections = 'refcats'
+dataRefs, dataIds = refCatInterface.getDataRefs(htmIds, butler, catalogName, collections)
+donutCatConfig = GenerateDonutCatalogWcsTaskConfig()
+donutCatConfig.filterName= 'phot_g_mean'
+donutCatConfig.donutSelector.fluxField = 'phot_g_mean_flux'
+# instantiate the task with the appropriate config
+donutCatTask = GenerateDonutCatalogWcsTask(config=donutCatConfig)
+refObjLoader = donutCatTask.getRefObjLoader(dataRefs)
+refObjLoader.config.filterMap = {""g"": ""phot_g_mean"" }
+Illustrate the original WCS and the 180-deg off WCS to check whether the 180 degree offset
+has been resolved (the ticket is marked as âDoneâ https:/
+/jira.lsstcorp.org/browse/DM-31997)
+# Get sources from reference catalog assuming the original WCS
+originalWcs = postIsr.getWcs()
+originalDonutCatStruct = donutCatTask.run(dataRefs, postIsr, )
+[5]:
+[6]:
+[7]:
+[8]:
+Typesetting math: 100%
+
+
+Question: Hi there, 
+ Is there some way I find out what butler repos are available to me? Or, more specifically, how can I list all the values for X that I can put into  butler = dafButler.Butler(X, collections='2.2i/runs/DP0.2') . How can I find out, for example, that I  can  put  dp02  in there, but not, say,   dp85 ? 
+ Thanks! 
+ James
+ps: the 'X' is some placeholder for a specific dataset or concept.
+
+from lsstcorp import dafbutler
+
+butler = dafButler Buttler('/local/path/to/some/dataset/', collections='2.2i/runs/DP0.2')
+
+# What are the available options that I can use to determine what datasets I can currently retrieve? For example, can I simply print out all available datasets or is there a more sophisticated way?
+
+---
+The question pertains to understanding the available datasets or concepts that can be queried from the Butler component.
+
+---
+[5]:
+[6]:
+[7]:
+[8]:
+The question pertains to understanding the available datasets or concepts that can be queried from the Butler component. For example, can I simply print out all available datasets or is there a more sophisticated way?
+
+---
+
+**Response:**
+
+The Butler component in LST's Distelt framework provides a simple API for selecting datasets. In Python, you can use the `butler` module to construct and query datasets. The `butler` object provides methods for fetching data from the Datastore and the Registry.
+
+To list all available datasets, you would typically iterate over the `datasets` attribute of the `butler` object. Here is a",0.1947272279220064,0.06663405346912114,0.15069680814398131,0.08608289866348524,0.2246844878385039,0.08791098158094164
+"Iâm having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? 
+ Iâve tried just copying a few of the .texi files from  https://github.com/FFTW/fftw3/tree/master/doc  into my LSST directory but this does not seem to work. Iâve tried aliasing âmakeinfoâ away but that is not working. Any suggestions?",This has now been fixed and 3.3.4 is the current. Hope that it solves your problem.,"Iâm having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? 
+ Iâve tried just copying a few of the .texi files from  https://github.com/FFTW/fftw3/tree/master/doc  into my LSST directory but this does not seem to work. Iâve tried aliasing âmakeinfoâ away but that is not working. Any suggestions?
+I have just installed FFTW3.2.1 on top of FFTW3.3.0. It works fine on my machine.
+I have just installed FFTW3.2.1 on top of FFTW3.3.0. It works fine on my machine.
+That's good to hear. Thanks for the update.
+So we have to wait for FFTW 3.4.1 before we can use FFTW 3.3.4?
+@matt.carr : I am not sure. I am not sure if the new version of FFTW is being shipped with LSST or not, and whether we will be able to install it. I will ping @matt.carr and @daniel.haskell to find out.
+As far as I know, FFTW 3.4.1 will be packaged with LSST.
+I am not sure if the new version of","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+LARGE SYNOPTIC SURVEY TELESCOPE
+Notes on use of TeX and texmf for Construction papers
+PSTN-050
+Latest Revision 2020-01-24
+git commit -am ""I did stuff ""
+git push
+Make sure your push worked and you did not get any merge conï¬icts.
+4
+Running local build and other tools
+To build you local ï¬le use the Makeï¬le in the repo simply type make.
+Because you have the DM texmf there are other tools included as follows. The full DM docs
+are on https://lsst-texmf.lsst.io/.
+4.1
+Authors
+The author list is generated form the author database 1 - you list the relevant id in authors.yaml.
+If you update authors.yaml run make authors.tex.
+4.2
+Bibliography
+There are several bibliography ï¬les in lsst-texmf/texmf/bibtex/bib/ for project documents
+and ADS papers. So you may
+cite project handles like Dubois-Felsmann & Jenness (LSE-61), William OâMullane (PSTN-017)
+and ADS refs like 2019arXiv190713060O2 OâMullane et al. (2019).
+Additions to the general bibliography should be done as a Pull Request to https://github.
+com/lsst/lsst-texmf/.
+See also https://lsst-texmf.lsst.io/lsstdoc.html#bibliographies.
+You may also add refs to local.bib.
+1lsst-texmf/etc/authordb.yaml
+2listed in refs_ads.bib
+3
+
+
+5.1 Adding a new Conda package
+1. The name of the package needs to be added to the âbleedâ or un-versioned environment files
+in the lsst/scipipe_conda_env  repo. Which are:
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_bleed-linux-
+64.txt
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_bleed-osx-
+64.txt
+After the implementation of DM-17457, the conda environments have been migrated to
+yaml  format. This permits to add pip packages to the environment definition.
+The bleed env files should be keep in sync with the exception of the nomkl  package,
+which is required on linux . Also note that the env files should be kept sorted to allow for
+clean diff  s.
+2. The regular conda env files need to be updated by running a fresh install with deploy -b`
+(bleed install) and then manually exporting the env to a file. A side effect of this is other
+package versions will almost certainly change and this is an ABI breaking event. The existing
+env files are:
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_packages-
+linux-64.txt
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_packages-
+osx-64.txt
+conda list -e  should be run on linux  and osx  installs and the results committed for
+both platforms as a single commit so that the the abbrev sha1 of the latest commit for
+both files will be the same.
+3. As an abbreviated sha1 of the lsst/lsstsw  repo is used to select which [version of] conda
+env files are used and to define the eups binary tarball âABIâ, jenkins needs to know this value
+to ensure that newinstall.sh  is explicitly using the correct ref and to construct the paths of
+the tarball EUPS_PKGROOT  s. The value of splenv_ref  / LSST_SPLENV_REF  needs to be updated at:
+https:/
+/github.com/lsst-dm/jenkins-dm-
+jobs/blob/master/etc/scipipe/build_matrix.yaml#L10
+https:/
+/github.com/lsst/lsst/blob/master/scripts/newinstall.sh#L33
+
+
+Question: Iâm having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? 
+ Iâve tried just copying a few of the .texi files from  https://github.com/FFTW/fftw3/tree/master/doc  into my LSST directory but this does not seem to work. Iâve tried aliasing âmakeinfoâ away but that is not working. Any suggestions?
+The FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4?
+
+Question: Iâm having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in '13) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? Should we change the default FFTW version to 3.3.4?
+
+Question: Iâm having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue","Iâm having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? 
+ Iâve tried just copying a few of the .texi files from  https://github.com/FFTW/fftw3/tree/master/doc  into my LSST directory but this does not seem to work. Iâve tried aliasing âmakeinfoâ away but that is not working. Any suggestions?
+<issue_comment>username_1: I have the same problem. I tried to install FFTW 3.3.4, but I still get the same error.
+I will try to reinstall the FFTW 3.3.3.
+<issue_comment>username_0: Hi @username_1,
+
+I haven't tried installing 3.3.4 yet. Do you just mean the git master?
+
+Thanks,
+
+Steve
+<issue_comment>username_1: No, I mean the FFTW package from our distribution. I tried to install from the FFTW webpage, but I got the same error.
+<issue_comment>username_0: Ok, Iâll try installing 3.3.4 and see if that helps.
+
+Steve
+<issue_comment>username_1: I tried to install 3.3.4, but this is the error I got:","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+LARGE SYNOPTIC SURVEY TELESCOPE
+Notes on use of TeX and texmf for Construction papers
+PSTN-050
+Latest Revision 2020-01-24
+git commit -am ""I did stuff ""
+git push
+Make sure your push worked and you did not get any merge conï¬icts.
+4
+Running local build and other tools
+To build you local ï¬le use the Makeï¬le in the repo simply type make.
+Because you have the DM texmf there are other tools included as follows. The full DM docs
+are on https://lsst-texmf.lsst.io/.
+4.1
+Authors
+The author list is generated form the author database 1 - you list the relevant id in authors.yaml.
+If you update authors.yaml run make authors.tex.
+4.2
+Bibliography
+There are several bibliography ï¬les in lsst-texmf/texmf/bibtex/bib/ for project documents
+and ADS papers. So you may
+cite project handles like Dubois-Felsmann & Jenness (LSE-61), William OâMullane (PSTN-017)
+and ADS refs like 2019arXiv190713060O2 OâMullane et al. (2019).
+Additions to the general bibliography should be done as a Pull Request to https://github.
+com/lsst/lsst-texmf/.
+See also https://lsst-texmf.lsst.io/lsstdoc.html#bibliographies.
+You may also add refs to local.bib.
+1lsst-texmf/etc/authordb.yaml
+2listed in refs_ads.bib
+3
+
+
+5.1 Adding a new Conda package
+1. The name of the package needs to be added to the âbleedâ or un-versioned environment files
+in the lsst/scipipe_conda_env  repo. Which are:
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_bleed-linux-
+64.txt
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_bleed-osx-
+64.txt
+After the implementation of DM-17457, the conda environments have been migrated to
+yaml  format. This permits to add pip packages to the environment definition.
+The bleed env files should be keep in sync with the exception of the nomkl  package,
+which is required on linux . Also note that the env files should be kept sorted to allow for
+clean diff  s.
+2. The regular conda env files need to be updated by running a fresh install with deploy -b`
+(bleed install) and then manually exporting the env to a file. A side effect of this is other
+package versions will almost certainly change and this is an ABI breaking event. The existing
+env files are:
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_packages-
+linux-64.txt
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_packages-
+osx-64.txt
+conda list -e  should be run on linux  and osx  installs and the results committed for
+both platforms as a single commit so that the the abbrev sha1 of the latest commit for
+both files will be the same.
+3. As an abbreviated sha1 of the lsst/lsstsw  repo is used to select which [version of] conda
+env files are used and to define the eups binary tarball âABIâ, jenkins needs to know this value
+to ensure that newinstall.sh  is explicitly using the correct ref and to construct the paths of
+the tarball EUPS_PKGROOT  s. The value of splenv_ref  / LSST_SPLENV_REF  needs to be updated at:
+https:/
+/github.com/lsst-dm/jenkins-dm-
+jobs/blob/master/etc/scipipe/build_matrix.yaml#L10
+https:/
+/github.com/lsst/lsst/blob/master/scripts/newinstall.sh#L33
+
+
+Question: Iâm having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? 
+ Iâve tried just copying a few of the .texi files from  https://github.com/FFTW/fftw3/tree/master/doc  into my LSST directory but this does not seem to work. Iâve tried aliasing âmakeinfoâ away but that is not working. Any suggestions?
+
+A: This was because the texinfo version was older than the fftw version required.
+The patch was not included in the current fftw version. So if you try to use the latest fftw version, you wont be able to compile the documentation.
+You have to have the patch version of texinfo included in the fftw version you are using.
+I was able to compile the fftw documentation with texinfo.
+
+A: I had the same problem. I fixed it by compiling FFTW with an older version of texinfo.
+
+A: I got the same error message while compiling the FFTW documentation. I tried to compile it with texinfo-5.1 and then it worked. So I think there is a bug in the FFTW-5.1 documentation.","Iâm having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? 
+ Iâve tried just copying a few of the .texi files from  https://github.com/FFTW/fftw3/tree/master/doc  into my LSST directory but this does not seem to work. Iâve tried aliasing âmakeinfoâ away but that is not working. Any suggestions? 
+
+â¢ If I need FFTW for a specific application, can I just download FFTW 3.3.4 and link it manually? 
+
+â¢ If I change the default FFTW version in the Texinfo setup file (not the Makefile), what are the implications for future versions of Texinfo?
+
+â¢ Is there a reliable way to check if FFTW is installed? Or does this require compiling something?
+
+Iâd really appreciate any guidance you can provide regarding this issue.
+```output
+$ lsfftw
+README  INSTALL  Makefile  Makefile.dynamize  Makefile.old  doc  doc/info  doc/texinfo  src
+```
+```
+Based on your findings, I have a few questions:
+
+1. Is there a known way to ensure FFTW is correctly installed on my system, aside from linking it manually or changing the default version in the Texinfo setup file?
+
+2. The README file suggests installing FFTW via `./configure` and `make","You are an astrophysics expert. Please answer the question on astrophysics based on the following context:
+
+LARGE SYNOPTIC SURVEY TELESCOPE
+Notes on use of TeX and texmf for Construction papers
+PSTN-050
+Latest Revision 2020-01-24
+git commit -am ""I did stuff ""
+git push
+Make sure your push worked and you did not get any merge conï¬icts.
+4
+Running local build and other tools
+To build you local ï¬le use the Makeï¬le in the repo simply type make.
+Because you have the DM texmf there are other tools included as follows. The full DM docs
+are on https://lsst-texmf.lsst.io/.
+4.1
+Authors
+The author list is generated form the author database 1 - you list the relevant id in authors.yaml.
+If you update authors.yaml run make authors.tex.
+4.2
+Bibliography
+There are several bibliography ï¬les in lsst-texmf/texmf/bibtex/bib/ for project documents
+and ADS papers. So you may
+cite project handles like Dubois-Felsmann & Jenness (LSE-61), William OâMullane (PSTN-017)
+and ADS refs like 2019arXiv190713060O2 OâMullane et al. (2019).
+Additions to the general bibliography should be done as a Pull Request to https://github.
+com/lsst/lsst-texmf/.
+See also https://lsst-texmf.lsst.io/lsstdoc.html#bibliographies.
+You may also add refs to local.bib.
+1lsst-texmf/etc/authordb.yaml
+2listed in refs_ads.bib
+3
+
+
+5.1 Adding a new Conda package
+1. The name of the package needs to be added to the âbleedâ or un-versioned environment files
+in the lsst/scipipe_conda_env  repo. Which are:
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_bleed-linux-
+64.txt
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_bleed-osx-
+64.txt
+After the implementation of DM-17457, the conda environments have been migrated to
+yaml  format. This permits to add pip packages to the environment definition.
+The bleed env files should be keep in sync with the exception of the nomkl  package,
+which is required on linux . Also note that the env files should be kept sorted to allow for
+clean diff  s.
+2. The regular conda env files need to be updated by running a fresh install with deploy -b`
+(bleed install) and then manually exporting the env to a file. A side effect of this is other
+package versions will almost certainly change and this is an ABI breaking event. The existing
+env files are:
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_packages-
+linux-64.txt
+https:/
+/github.com/lsst/scipipe_conda_env/blob/master/etc/conda3_packages-
+osx-64.txt
+conda list -e  should be run on linux  and osx  installs and the results committed for
+both platforms as a single commit so that the the abbrev sha1 of the latest commit for
+both files will be the same.
+3. As an abbreviated sha1 of the lsst/lsstsw  repo is used to select which [version of] conda
+env files are used and to define the eups binary tarball âABIâ, jenkins needs to know this value
+to ensure that newinstall.sh  is explicitly using the correct ref and to construct the paths of
+the tarball EUPS_PKGROOT  s. The value of splenv_ref  / LSST_SPLENV_REF  needs to be updated at:
+https:/
+/github.com/lsst-dm/jenkins-dm-
+jobs/blob/master/etc/scipipe/build_matrix.yaml#L10
+https:/
+/github.com/lsst/lsst/blob/master/scripts/newinstall.sh#L33
+
+
+Question: Iâm having trouble building FFTW with texinfo installed on my system. Texinfo builds the FFTW documentation. It looks like the FFTW version in the stack is 3.3.3 (released in '12) which has a known issue with texinfo-5. Supposedly FFTW 3.3.4 (released in March '14) fixes this issue. Anyone else run into this? Should we change the default FFTW version to 3.3.4? 
+ Iâve tried just copying a few of the .texi files from  https://github.com/FFTW/fftw3/tree/master/doc  into my LSST directory but this does not seem to work. Iâve tried aliasing âmakeinfoâ away but that is not working. Any suggestions?
+ 6. When building FFTW, many warning and error messages pop up. Is there a way to automatically suppress these messages? For instance, should we add a \catcode 12{ directive at the start of the FFTW source files? This might help avoid some of the warning messages related to character handling. For example: 
+    Warning 1: catcode changes within macro definition.
+    Warning 3: An open brace encountered while parsing.
+    Warning 4: An unexpected character was encountered while parsing.
+    Warning 5: Missing \end{itemize} in itemize environment.
+    Warning 6: Missing \end{enumerate} in enumerate environment.
+    Warning 7: Missing \end{itemize} in itemize environment.
+    Warning 8: An open brace encountered while parsing.
+    Warning 9: An unexpected character was encountered while parsing.
+
+Any help with these issues would be greatly appreciated!
+
+Here is a small excerpt from the LaTeX source showing examples of the warnings:
+
+```latex
+\item {Sinusoidal convolution}
+\end{itemize}
+
+\begin{enumerate}
+    \item {Convolution of sin and cos functions}
+    \end{enumerate}
+```
+```
+
+Based on the provided context, here are",0.0910329416926996,0.1264102181496373,0.09859589885306451,0.14538606213520144,0.10253032709973466,0.11867541158891054
