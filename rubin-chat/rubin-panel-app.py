@@ -16,6 +16,7 @@ from ssec_tutorials import download_olmo_model
 warnings.filterwarnings("ignore")
 
 import panel as pn
+import os
 
 def get_chain(callback_handlers: list[BaseCallbackHandler], input_prompt_template: str):
     # 1. Set up the vector database retriever.
@@ -139,7 +140,15 @@ async def callback(contents, user, instance):
 pn.extension()
 
 model_path = download_olmo_model()
-qdrant_path = Path("/workspaces/Rubin-RAG/resources/rubin_qdrant")
+
+if "CODESPACES" in os.environ:
+    qdrant_path = Path("/workspaces/Rubin-RAG/resources/rubin_qdrant")
+else:
+    qdrant_path = Path("resources/rubin_qdrant")
+
+# Ensure the Qdrant path exists
+assert qdrant_path.exists(), f"Qdrant path does not exist: {qdrant_path}"
+
 qdrant_collection = "rubin_telescope"
 
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L12-v2")
@@ -149,6 +158,7 @@ embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L
 # )
 
 client = QdrantClient(path=str(qdrant_path))
+# print("Available Qdrant collections:", client.get_collections())
 db = Qdrant(
     client=client,
     collection_name=qdrant_collection,
